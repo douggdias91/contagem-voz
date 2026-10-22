@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Contagem por Voz MB52 - Mobile v13</title>
+<title>Contagem por Voz MB52 - Supabase v14</title>
 <style>
 :root{--bg:#f4f7f5;--card:#fff;--ink:#1b2b24;--muted:#65746d;--line:#dce6e0;--green:#166534;--green2:#dcfce7;--blue:#1d4ed8;--amber:#92400e;--amberbg:#fef3c7;--red:#b91c1c;--redbg:#fee2e2;--shadow:0 8px 26px rgba(20,40,30,.08)}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Segoe UI,Arial,sans-serif}.wrap{max-width:1450px;margin:0 auto;padding:22px}.top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}.top h1{margin:0;font-size:26px}.top p{margin:6px 0 0;color:var(--muted)}.badge{background:#e8f5ed;color:var(--green);padding:7px 10px;border-radius:999px;font-size:12px;font-weight:700}.grid{display:grid;grid-template-columns:1.25fr .75fr;gap:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px}.card h2{margin:0 0 12px;font-size:17px}.voiceBox{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}.mic{border:0;border-radius:12px;background:var(--green);color:#fff;font-weight:800;padding:13px 18px;cursor:pointer;min-width:150px}.mic.listening{background:var(--red);animation:pulse 1.1s infinite}@keyframes pulse{50%{opacity:.72}}input,select,button,textarea{font:inherit}.phrase{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff}.btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 13px;cursor:pointer;font-weight:650}.btn.primary{background:var(--green);color:#fff;border-color:var(--green)}.btn.danger{color:var(--red)}.hint{font-size:12px;color:var(--muted);margin-top:9px}.preview{margin-top:14px;padding:14px;border:1px solid #bbdcc8;background:#f0fdf4;border-radius:12px}.preview.warn{border-color:#f4cf79;background:#fffbeb}.preview.error{border-color:#efaaaa;background:#fff1f2}.hidden{display:none!important}.kv{display:grid;grid-template-columns:150px 1fr;gap:7px 12px;font-size:14px}.kv b{color:#42524a}.bigResult{font-size:28px;font-weight:900;color:var(--green)}.actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{padding:12px;border:1px solid var(--line);border-radius:10px}.stat span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase}.stat strong{font-size:22px}.tableWrap{overflow:auto;border:1px solid var(--line);border-radius:12px}table{width:100%;border-collapse:collapse;font-size:13px}th{position:sticky;top:0;background:#eef4f0;color:#516159;text-align:left;padding:9px;border-bottom:1px solid var(--line);white-space:nowrap}td{padding:8px 9px;border-bottom:1px solid #edf2ef;vertical-align:top}tr:hover td{background:#fafcfb}.num{text-align:right;font-variant-numeric:tabular-nums}.materialName{font-weight:700}.sub{font-size:11px;color:var(--muted);margin-top:2px}.searchRow{display:flex;gap:8px;margin-bottom:10px}.searchRow input{flex:1}.historyItem{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px}.historyItem .row{display:flex;justify-content:space-between;gap:10px}.pill{display:inline-block;padding:3px 7px;border-radius:999px;background:#eef4f0;font-size:11px;font-weight:700}.configList{max-height:520px;overflow:auto}.config{border-bottom:1px solid var(--line);padding:10px 0}.config .inputs{display:grid;grid-template-columns:1fr 90px 110px;gap:6px;margin-top:7px}.config input,.config select{border:1px solid var(--line);border-radius:8px;padding:7px;width:100%}.toast{position:fixed;right:20px;bottom:20px;background:#10271d;color:#fff;padding:11px 14px;border-radius:10px;box-shadow:var(--shadow);z-index:99;max-width:380px}.footer{font-size:12px;color:var(--muted);margin-top:14px}.tabs{display:flex;gap:6px;margin-bottom:12px}.tab{padding:8px 11px;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer}.tab.active{background:#e8f5ed;border-color:#9bc8ad;color:var(--green);font-weight:800}@media(max-width:980px){.grid{grid-template-columns:1fr}.voiceBox{grid-template-columns:1fr}.mic{width:100%}.summary{grid-template-columns:1fr}.kv{grid-template-columns:1fr}.wrap{padding:12px}}
@@ -55,11 +55,15 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
   .tab{min-height:46px;font-size:14px}
   .configList{max-height:none}
 }
+
+.cloudOnline{background:#dcfce7!important;color:#166534!important}.cloudSync{background:#fef3c7!important;color:#92400e!important}.cloudOffline{background:#fee2e2!important;color:#b91c1c!important}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
 </head>
 <body>
 <div class="wrap">
-  <div class="top"><div><h1>Contagem por Voz — Mobile v13</h1><p>Teste local da lógica antes de levar para o Lovable. Os dados abaixo vieram do MB52 enviado.</p></div><div class="badge">PRONTO PARA GITHUB PAGES</div></div>
+  <div class="top"><div><h1>Contagem por Voz — Supabase v14</h1><p>Teste local da lógica antes de levar para o Lovable. Os dados abaixo vieram do MB52 enviado.</p></div><div><div class="badge" id="cloudBadge">SOMENTE LOCAL</div><div class="sub" id="cloudDetail" style="text-align:right;margin-top:4px">Supabase não configurado</div></div></div>
 
   <div class="grid">
     <div>
@@ -106,7 +110,7 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
       <div class="card" style="margin-top:16px"><h2>Observação do protótipo</h2><div class="hint" style="font-size:13px;line-height:1.6">A UM foi sugerida automaticamente apenas para facilitar o teste. Na versão integrada ao aplicativo, a UM deve vir do cadastro/MB52/LT correto. Você pode alterar a UM na aba <b>Cadastro de voz</b>.</div></div>
     </div>
   </div>
-  <div class="footer">Este arquivo roda localmente no navegador. Fluxo: Iniciar voz → falar → Encerrar voz → revisar → Salvar contagem. Os lançamentos ficam no localStorage deste aparelho.</div>
+  <div class="footer">Este arquivo roda localmente no navegador. Fluxo: Iniciar voz → falar → Encerrar voz → revisar → Salvar contagem. Os lançamentos usam Supabase quando configurado e mantêm cache local como contingência.</div>
 </div>
 <div id="toast" class="toast hidden"></div>
 <script>
@@ -115,6 +119,57 @@ const STORE='leao_voice_proto_v2';
 const CONFIG='leao_voice_proto_cfg_v2';
 let entries=JSON.parse(localStorage.getItem(STORE)||'[]');
 let cfg=JSON.parse(localStorage.getItem(CONFIG)||'{}');
+
+// --- Supabase / nuvem ---
+let cloud=null;
+let cloudEnabled=false;
+let cloudSyncing=false;
+const CLOUD_CONF=window.CONTAGEM_SUPABASE||{};
+const CLOUD_WORKSPACE=CLOUD_CONF.workspace||'leao-contagem-voz';
+function setCloudStatus(mode,detail){
+  const b=document.getElementById('cloudBadge'),d=document.getElementById('cloudDetail');
+  if(!b)return;
+  b.className='badge '+(mode==='online'?'cloudOnline':mode==='sync'?'cloudSync':mode==='offline'?'cloudOffline':'');
+  b.textContent=mode==='online'?'NUVEM CONECTADA':mode==='sync'?'SINCRONIZANDO':mode==='offline'?'SEM CONEXÃO':'SOMENTE LOCAL';
+  if(d)d.textContent=detail||'';
+}
+function cloudConfigured(){
+  return !!(CLOUD_CONF.url && CLOUD_CONF.anonKey && !String(CLOUD_CONF.url).includes('COLE_AQUI') && !String(CLOUD_CONF.anonKey).includes('COLE_AQUI'));
+}
+function cloudEntryRow(e){return {id:e.id,workspace:CLOUD_WORKSPACE,ts:e.ts,material:e.material,descricao:e.descricao,phrase:e.phrase,base:e.base,factor:e.factor,default_factor:!!e.defaultFactor,um:e.um,result:e.result}}
+function rowEntry(r){return {id:r.id,ts:Number(r.ts),material:r.material,descricao:r.descricao,phrase:r.phrase,base:Number(r.base),factor:r.factor===null?null:Number(r.factor),defaultFactor:!!r.default_factor,um:r.um,result:Number(r.result)}}
+async function pushEntryCloud(e){if(!cloudEnabled)return false;try{const {error}=await cloud.from('voice_entries').upsert(cloudEntryRow(e));if(error)throw error;return true}catch(err){console.warn('Supabase entry:',err);setCloudStatus('offline','Alteração salva localmente; sincronizaremos depois.');return false}}
+async function deleteEntryCloud(id){if(!cloudEnabled)return false;try{const {error}=await cloud.from('voice_entries').delete().eq('workspace',CLOUD_WORKSPACE).eq('id',id);if(error)throw error;return true}catch(err){console.warn('Supabase delete:',err);setCloudStatus('offline','Exclusão feita localmente; tente sincronizar depois.');return false}}
+async function pushCfgCloud(mat){if(!cloudEnabled)return false;const c=getCfg(mat);try{const {error}=await cloud.from('voice_material_config').upsert({workspace:CLOUD_WORKSPACE,material:mat,aliases:String(c.aliases||''),factor:String(c.factor||''),um:String(c.um||'KG'),updated_at:new Date().toISOString()});if(error)throw error;return true}catch(err){console.warn('Supabase cfg:',err);setCloudStatus('offline','Cadastro salvo localmente; sincronizaremos depois.');return false}}
+async function pullCloud(){
+  if(!cloudEnabled||cloudSyncing)return;
+  cloudSyncing=true;setCloudStatus('sync','Buscando dados compartilhados…');
+  try{
+    const [{data:remoteEntries,error:ee},{data:remoteCfg,error:ce}]=await Promise.all([
+      cloud.from('voice_entries').select('*').eq('workspace',CLOUD_WORKSPACE).order('ts',{ascending:true}),
+      cloud.from('voice_material_config').select('*').eq('workspace',CLOUD_WORKSPACE)
+    ]);
+    if(ee)throw ee;if(ce)throw ce;
+    const map=new Map((remoteEntries||[]).map(r=>[r.id,rowEntry(r)]));
+    for(const e of entries) if(!map.has(e.id)) map.set(e.id,e);
+    entries=[...map.values()].sort((a,b)=>a.ts-b.ts);
+    for(const r of (remoteCfg||[])) cfg[r.material]={aliases:r.aliases||'',factor:r.factor||'',um:r.um||'KG'};
+    localStorage.setItem(STORE,JSON.stringify(entries));localStorage.setItem(CONFIG,JSON.stringify(cfg));
+    // Envia itens locais que ainda não estavam na nuvem.
+    if(entries.length) await cloud.from('voice_entries').upsert(entries.map(cloudEntryRow));
+    const cfgRows=Object.keys(cfg).map(mat=>({workspace:CLOUD_WORKSPACE,material:mat,aliases:String(cfg[mat]?.aliases||''),factor:String(cfg[mat]?.factor||''),um:String(cfg[mat]?.um||'KG'),updated_at:new Date().toISOString()}));
+    if(cfgRows.length) await cloud.from('voice_material_config').upsert(cfgRows);
+    renderAll();setCloudStatus('online',`Compartilhado • ${entries.length} lançamentos`);
+  }catch(err){console.warn('Supabase pull:',err);setCloudStatus('offline','Usando cache local. Verifique internet/configuração.');}
+  finally{cloudSyncing=false}
+}
+async function initCloud(){
+  if(!cloudConfigured()){setCloudStatus('local','Configure supabase-config.js para compartilhar entre aparelhos.');return}
+  if(!window.supabase?.createClient){setCloudStatus('offline','Biblioteca Supabase não carregou.');return}
+  try{cloud=window.supabase.createClient(CLOUD_CONF.url,CLOUD_CONF.anonKey,{auth:{persistSession:false,autoRefreshToken:false}});cloudEnabled=true;await pullCloud();setInterval(()=>{if(document.visibilityState==='visible')pullCloud()},15000);window.addEventListener('online',pullCloud);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pullCloud()});}
+  catch(err){console.warn(err);setCloudStatus('offline','Não foi possível conectar ao Supabase.');}
+}
+
 let pending=null;
 
 function stripAccents(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
@@ -341,9 +396,9 @@ function buildPreview(phrase,m,score,autoConfirm=false){
     setTimeout(()=>confirmPending(true),180);
   }
 }
-function confirmPending(){if(!pending?.m)return;const {phrase,m,calc}=pending;const now=Date.now();const last=entries[entries.length-1];if(last&&last.material===m.material&&last.phrase===phrase&&now-last.ts<2500){toast('Salvamento duplicado bloqueado.');return}entries.push({id:crypto.randomUUID?crypto.randomUUID():String(now)+Math.random(),ts:now,material:m.material,descricao:m.descricao,phrase,base:calc.base,factor:calc.factor,defaultFactor:calc.usedDefault,um:calc.um,result:calc.result});localStorage.setItem(STORE,JSON.stringify(entries));pending=null;document.getElementById('preview').classList.add('hidden');document.getElementById('phrase').value='';renderAll();voiceState('✅ <b>Contagem salva.</b> Pronto para iniciar uma nova leitura.');setFeedback('saved','SALVO',`Resultado salvo: ${fmt(calc.result,calc.um)} ${calc.um}`);toast('Contagem adicionada ao acumulado.');setTimeout(()=>{setFeedback('idle','PRONTO PARA INICIAR','Toque em “Iniciar voz”.');resetUnderstanding()},1200)}
+async function confirmPending(){if(!pending?.m)return;const {phrase,m,calc}=pending;const now=Date.now();const last=entries[entries.length-1];if(last&&last.material===m.material&&last.phrase===phrase&&now-last.ts<2500){toast('Salvamento duplicado bloqueado.');return}const e={id:crypto.randomUUID?crypto.randomUUID():String(now)+Math.random(),ts:now,material:m.material,descricao:m.descricao,phrase,base:calc.base,factor:calc.factor,defaultFactor:calc.usedDefault,um:calc.um,result:calc.result};entries.push(e);localStorage.setItem(STORE,JSON.stringify(entries));pending=null;document.getElementById('preview').classList.add('hidden');document.getElementById('phrase').value='';renderAll();voiceState('✅ <b>Contagem salva.</b> Pronto para iniciar uma nova leitura.');setFeedback('saved','SALVO',`Resultado salvo: ${fmt(calc.result,calc.um)} ${calc.um}`);toast(cloudEnabled?'Contagem salva. Sincronizando na nuvem…':'Contagem salva localmente.');await pushEntryCloud(e);if(cloudEnabled)setCloudStatus('online',`Compartilhado • ${entries.length} lançamentos`);setTimeout(()=>{setFeedback('idle','PRONTO PARA INICIAR','Toque em “Iniciar voz”.');resetUnderstanding()},1200)}
 function cancelPending(){pending=null;document.getElementById('preview').classList.add('hidden');document.getElementById('phrase').value='';voiceState('Pronto para iniciar uma nova leitura.');setFeedback('idle','PRONTO PARA INICIAR','Toque em “Iniciar voz”.');resetUnderstanding()}
-function undoEntry(id){entries=entries.filter(e=>e.id!==id);localStorage.setItem(STORE,JSON.stringify(entries));renderAll();toast('Lançamento desfeito e total recalculado.');}
+async function undoEntry(id){entries=entries.filter(e=>e.id!==id);localStorage.setItem(STORE,JSON.stringify(entries));renderAll();toast('Lançamento desfeito e total recalculado.');await deleteEntryCloud(id);if(cloudEnabled)setCloudStatus('online',`Compartilhado • ${entries.length} lançamentos`);}
 function renderTotals(){const q=normText(document.getElementById('search').value);const body=document.getElementById('totalsBody');const rows=MATERIALS.filter(m=>!q||normText(m.material+' '+m.descricao+' '+voiceName(m)).includes(q)).map(m=>{const c=getCfg(m.material),t=totalFor(m.material);return `<tr><td>${m.material}</td><td><div class="materialName">${m.descricao}</div></td><td>${voiceName(m)}</td><td>${c.um||m.um_sugerida}</td><td class="num">${fmt(m.estoque,c.um||m.um_sugerida)}</td><td class="num"><b>${t?fmt(t,c.um||m.um_sugerida):'—'}</b></td></tr>`}).join('');body.innerHTML=rows;document.getElementById('matCount').textContent=MATERIALS.length;document.getElementById('entryCount').textContent=entries.length;document.getElementById('countedCount').textContent=new Set(entries.map(e=>e.material)).size;}
 function renderHistory(){const el=document.getElementById('historyList');if(!entries.length){el.innerHTML='<div class="hint">Nenhuma contagem confirmada ainda.</div>';return}el.innerHTML=[...entries].reverse().map(e=>`<div class="historyItem"><div class="row"><div><b>${e.material} — ${e.descricao}</b><div class="sub">${new Date(e.ts).toLocaleString('pt-BR')} • “${e.phrase.replace(/</g,'&lt;')}”</div></div><div><span class="pill">${fmt(e.result,e.um)} ${e.um}</span></div></div><div class="sub" style="margin-top:6px">${e.factor===null?`Entrada simples: ${fmt(e.base,e.um)}`:`${fmt(e.base,'KG')} × ${fmt(e.factor,'KG')} = ${fmt(e.result,e.um)} ${e.um}${e.defaultFactor?' • fator padrão':''}`} • acumulado atual: <b>${fmt(totalFor(e.material),e.um)} ${e.um}</b></div><div class="actions"><button class="btn danger" onclick="undoEntry('${e.id}')">Desfazer esta entrada</button></div></div>`).join('')}
 function renderConfig(){
@@ -357,11 +412,11 @@ function renderConfig(){
   const info=document.getElementById('configFilterInfo');if(info)info.textContent=`Exibindo ${filtered.length} de ${MATERIALS.length} materiais.`;
   el.innerHTML=filtered.map(m=>{const c=getCfg(m.material);return `<div class="config"><div><b>${m.material}</b> — ${m.descricao}</div><div class="sub">Nome base: ${voiceName(m)}</div><div class="inputs"><input value="${String(c.aliases||'').replace(/"/g,'&quot;')}" placeholder="apelidos; separados; por ;" onchange="updateCfg('${m.material}','aliases',this.value)"><input value="${c.factor??''}" placeholder="fator" inputmode="decimal" onchange="updateCfg('${m.material}','factor',this.value)"><select onchange="updateCfg('${m.material}','um',this.value)"><option ${c.um==='KG'?'selected':''}>KG</option><option ${c.um==='UN'?'selected':''}>UN</option></select></div></div>`}).join('') || '<div class="hint">Nenhum material encontrado para este filtro.</div>';
 }
-function updateCfg(mat,key,val){cfg[mat]={...getCfg(mat),[key]:val};saveCfg();renderTotals();toast('Cadastro atualizado.');}
+async function updateCfg(mat,key,val){cfg[mat]={...getCfg(mat),[key]:val};saveCfg();renderTotals();toast(cloudEnabled?'Cadastro atualizado. Sincronizando…':'Cadastro atualizado localmente.');await pushCfgCloud(mat);if(cloudEnabled)setCloudStatus('online',`Cadastro compartilhado • ${entries.length} lançamentos`);}
 function renderAll(){renderTotals();renderHistory();renderConfig()}
 function exportCsv(){const header=['Material','Descricao MB52','UM','Contagem acumulada'];const lines=[header];for(const m of MATERIALS){const c=getCfg(m.material),t=totalFor(m.material);if(t!==0)lines.push([m.material,m.descricao,c.um||m.um_sugerida,t])}const csv='\ufeff'+lines.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='contagem_voz_final.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 
-document.getElementById('interpretBtn').onclick=interpret;document.getElementById('phrase').addEventListener('keydown',e=>{if(e.key==='Enter')interpret()});document.getElementById('search').oninput=renderTotals;document.getElementById('configSearch').oninput=renderConfig;document.getElementById('configUm').onchange=renderConfig;document.getElementById('configClear').onclick=()=>{document.getElementById('configSearch').value='';document.getElementById('configUm').value='';renderConfig()};document.getElementById('exportBtn').onclick=exportCsv;document.getElementById('resetBtn').onclick=()=>{if(confirm('Limpar todos os lançamentos de teste?')){entries=[];localStorage.setItem(STORE,'[]');renderAll();toast('Teste limpo.')}};
+document.getElementById('interpretBtn').onclick=interpret;document.getElementById('phrase').addEventListener('keydown',e=>{if(e.key==='Enter')interpret()});document.getElementById('search').oninput=renderTotals;document.getElementById('configSearch').oninput=renderConfig;document.getElementById('configUm').onchange=renderConfig;document.getElementById('configClear').onclick=()=>{document.getElementById('configSearch').value='';document.getElementById('configUm').value='';renderConfig()};document.getElementById('exportBtn').onclick=exportCsv;document.getElementById('resetBtn').onclick=async()=>{if(confirm('Limpar todos os lançamentos de teste deste workspace? Isso também apagará da nuvem.')){entries=[];localStorage.setItem(STORE,'[]');renderAll();if(cloudEnabled){try{await cloud.from('voice_entries').delete().eq('workspace',CLOUD_WORKSPACE);setCloudStatus('online','Histórico da nuvem limpo.')}catch(err){console.warn(err)}}toast('Teste limpo.')}};
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));['totals','history','config'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab))});
 
 
@@ -531,5 +586,6 @@ if(SR){mic.onclick=startVoice;stopMic.onclick=stopVoice}else{mic.disabled=true;m
 // Em arquivo local, o navegador pode pedir permissão a cada nova sessão. Esta versão não reinicia a escuta sozinha, evitando loop de autorização.
 if(location.protocol==='file:'){const st=document.getElementById('voiceState');st.insertAdjacentHTML('afterend','<div class="hint" style="margin-top:8px;padding:9px;border-radius:8px;background:#fff7ed;border:1px solid #fdba74"><b>Microfone no celular:</b> o arquivo HTML aberto diretamente pode não ter permissão de voz. Para testar o microfone, use a versão publicada em HTTPS pelo GitHub Pages.</div>');}
 renderAll();
+initCloud();
 </script>
 </body></html>
