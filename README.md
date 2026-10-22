@@ -19,3 +19,4 @@ Versão ajustada para celular/tablet e preparada para GitHub Pages.
 - Toque em **Encerrar voz** para revisar e depois em **Salvar contagem**.
 
 No Chrome Android, o reconhecimento de voz pode encerrar a sessão após uma pausa. Se isso ocorrer depois de captar a fala, o app preserva a transcrição e abre a prévia em vez de reiniciar o microfone.
+- Atualização Supabase v14
