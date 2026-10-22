@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Contagem por Voz MB52 - Mobile v13</title>
+<style>
+:root{--bg:#f4f7f5;--card:#fff;--ink:#1b2b24;--muted:#65746d;--line:#dce6e0;--green:#166534;--green2:#dcfce7;--blue:#1d4ed8;--amber:#92400e;--amberbg:#fef3c7;--red:#b91c1c;--redbg:#fee2e2;--shadow:0 8px 26px rgba(20,40,30,.08)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Segoe UI,Arial,sans-serif}.wrap{max-width:1450px;margin:0 auto;padding:22px}.top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}.top h1{margin:0;font-size:26px}.top p{margin:6px 0 0;color:var(--muted)}.badge{background:#e8f5ed;color:var(--green);padding:7px 10px;border-radius:999px;font-size:12px;font-weight:700}.grid{display:grid;grid-template-columns:1.25fr .75fr;gap:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px}.card h2{margin:0 0 12px;font-size:17px}.voiceBox{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}.mic{border:0;border-radius:12px;background:var(--green);color:#fff;font-weight:800;padding:13px 18px;cursor:pointer;min-width:150px}.mic.listening{background:var(--red);animation:pulse 1.1s infinite}@keyframes pulse{50%{opacity:.72}}input,select,button,textarea{font:inherit}.phrase{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff}.btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 13px;cursor:pointer;font-weight:650}.btn.primary{background:var(--green);color:#fff;border-color:var(--green)}.btn.danger{color:var(--red)}.hint{font-size:12px;color:var(--muted);margin-top:9px}.preview{margin-top:14px;padding:14px;border:1px solid #bbdcc8;background:#f0fdf4;border-radius:12px}.preview.warn{border-color:#f4cf79;background:#fffbeb}.preview.error{border-color:#efaaaa;background:#fff1f2}.hidden{display:none!important}.kv{display:grid;grid-template-columns:150px 1fr;gap:7px 12px;font-size:14px}.kv b{color:#42524a}.bigResult{font-size:28px;font-weight:900;color:var(--green)}.actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{padding:12px;border:1px solid var(--line);border-radius:10px}.stat span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase}.stat strong{font-size:22px}.tableWrap{overflow:auto;border:1px solid var(--line);border-radius:12px}table{width:100%;border-collapse:collapse;font-size:13px}th{position:sticky;top:0;background:#eef4f0;color:#516159;text-align:left;padding:9px;border-bottom:1px solid var(--line);white-space:nowrap}td{padding:8px 9px;border-bottom:1px solid #edf2ef;vertical-align:top}tr:hover td{background:#fafcfb}.num{text-align:right;font-variant-numeric:tabular-nums}.materialName{font-weight:700}.sub{font-size:11px;color:var(--muted);margin-top:2px}.searchRow{display:flex;gap:8px;margin-bottom:10px}.searchRow input{flex:1}.historyItem{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px}.historyItem .row{display:flex;justify-content:space-between;gap:10px}.pill{display:inline-block;padding:3px 7px;border-radius:999px;background:#eef4f0;font-size:11px;font-weight:700}.configList{max-height:520px;overflow:auto}.config{border-bottom:1px solid var(--line);padding:10px 0}.config .inputs{display:grid;grid-template-columns:1fr 90px 110px;gap:6px;margin-top:7px}.config input,.config select{border:1px solid var(--line);border-radius:8px;padding:7px;width:100%}.toast{position:fixed;right:20px;bottom:20px;background:#10271d;color:#fff;padding:11px 14px;border-radius:10px;box-shadow:var(--shadow);z-index:99;max-width:380px}.footer{font-size:12px;color:var(--muted);margin-top:14px}.tabs{display:flex;gap:6px;margin-bottom:12px}.tab{padding:8px 11px;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer}.tab.active{background:#e8f5ed;border-color:#9bc8ad;color:var(--green);font-weight:800}@media(max-width:980px){.grid{grid-template-columns:1fr}.voiceBox{grid-template-columns:1fr}.mic{width:100%}.summary{grid-template-columns:1fr}.kv{grid-template-columns:1fr}.wrap{padding:12px}}
+
+/* Mobile/tablet: controles grandes, uma coluna e áreas fáceis de tocar */
+@media(max-width:1100px){
+  .wrap{max-width:none;padding:12px 12px calc(100px + env(safe-area-inset-bottom));}
+  .top{align-items:center}.top h1{font-size:22px}.top p{font-size:13px}
+  .grid{grid-template-columns:1fr}.card{padding:14px;border-radius:12px;box-shadow:none}
+  .voiceBox{grid-template-columns:1fr;gap:9px}
+  .mic{min-height:58px;width:100%;font-size:18px;position:sticky;bottom:calc(10px + env(safe-area-inset-bottom));z-index:30;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+  .phrase,.btn,input,select{font-size:16px;min-height:46px}
+  .actions .btn{flex:1 1 150px;min-height:48px}
+  .tabs{overflow-x:auto;white-space:nowrap;padding-bottom:3px}.tab{min-height:44px;flex:0 0 auto}
+  .searchRow{flex-wrap:wrap}.searchRow input{flex:1 1 100%}.searchRow .btn{flex:1 1 130px}
+  .tableWrap{max-width:100%;-webkit-overflow-scrolling:touch}
+  table{font-size:12px;min-width:900px}
+  .historyItem{padding:12px}.historyItem .row{flex-direction:column}
+  .config .inputs{grid-template-columns:1fr}.configList{max-height:none}
+  .toast{left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));max-width:none}
+}
+@media(max-width:600px){
+  .top{flex-direction:column;gap:8px}.badge{align-self:flex-start}
+  .summary{grid-template-columns:1fr 1fr}.summary .stat:last-child{grid-column:1/-1}
+  .stat strong{font-size:20px}.kv{grid-template-columns:1fr}.bigResult{font-size:25px}
+}
+
+
+.voiceFeedback{margin-top:12px;border:1px solid var(--line);border-radius:12px;padding:12px;background:#f8faf9}.voiceFeedback.idle{background:#f8faf9}.voiceFeedback.wake{background:#eff6ff;border-color:#93c5fd}.voiceFeedback.hearing{background:#ecfeff;border-color:#67e8f9}.voiceFeedback.confirming{background:#fff7ed;border-color:#fdba74}.voiceFeedback.saved{background:#f0fdf4;border-color:#86efac}.voiceFeedback.error{background:#fff1f2;border-color:#fda4af}.voiceStatusTop{display:flex;align-items:center;gap:10px;font-weight:800}.voiceDot{width:12px;height:12px;border-radius:50%;background:#94a3b8;flex:0 0 auto}.wake .voiceDot{background:#2563eb;box-shadow:0 0 0 5px rgba(37,99,235,.12)}.hearing .voiceDot{background:#0891b2;animation:pulse 1s infinite}.confirming .voiceDot{background:#ea580c}.saved .voiceDot{background:#16a34a}.error .voiceDot{background:#dc2626}.liveTranscript{margin-top:8px;font-size:16px;min-height:24px;font-weight:650}.understanding{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}.understanding>div{border:1px solid var(--line);border-radius:9px;padding:8px;background:#fff}.understanding span{display:block;font-size:10px;text-transform:uppercase;color:var(--muted);margin-bottom:2px}.understanding b{font-size:13px}.okText{color:var(--green)}.waitText{color:var(--amber)}@media(max-width:700px){.understanding{grid-template-columns:1fr 1fr}.voiceFeedback{padding:11px}.liveTranscript{font-size:15px}}
+
+/* v13 - otimização celular/tablet */
+button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.mic:disabled{opacity:.65;cursor:wait}
+.mobileVoiceBar{display:none}
+@media(max-width:760px){
+  body{overscroll-behavior-y:contain}
+  .wrap{padding:8px 8px calc(120px + env(safe-area-inset-bottom))}
+  .top{margin-bottom:10px}.top h1{font-size:20px}.top p{font-size:12px}
+  .card{padding:12px;margin-top:10px!important}
+  .voiceBox{display:flex;flex-direction:column}
+  #micBtn,#stopMicBtn{position:static!important;min-height:64px;font-size:20px;border-radius:14px}
+  #stopMicBtn{background:#b91c1c!important}
+  #phrase{min-height:54px;font-size:17px}
+  #interpretBtn{min-height:52px;font-size:17px}
+  .voiceFeedback{position:relative;z-index:1}
+  .voiceStatusTop{font-size:17px}.liveTranscript{font-size:17px;line-height:1.35}
+  .understanding{grid-template-columns:1fr 1fr}.understanding>div{min-height:66px}
+  .tabs{position:sticky;top:0;background:var(--bg);z-index:20;padding-top:6px}
+  .tab{min-height:46px;font-size:14px}
+  .configList{max-height:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div><h1>Contagem por Voz — Mobile v13</h1><p>Teste local da lógica antes de levar para o Lovable. Os dados abaixo vieram do MB52 enviado.</p></div><div class="badge">PRONTO PARA GITHUB PAGES</div></div>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <h2>1. Fale ou digite uma contagem</h2>
+        <div class="voiceBox">
+          <button id="micBtn" class="mic">🎙 Iniciar voz</button><button id="stopMicBtn" class="mic hidden" style="background:var(--red)">■ Encerrar voz</button>
+          <input id="phrase" class="phrase" placeholder='Ex.: "caixinha camomila optima 85 caixas vezes 700"' />
+          <button id="interpretBtn" class="btn primary">Interpretar</button>
+        </div>
+        <div class="hint">Também aceita: “85 por 700”, “85 caixas com 700 em cada”, “25 unidades vezes 8,2 kg” e entradas simples como “cola pva 2,5 quilos”. O reconhecimento agora prioriza palavras-chave de família (caixinha, blend, envelope, etiqueta, filme, aroma, papel filtro, cola/adesivo etc.), além de tolerar abreviações, pequenas diferenças de pronúncia/transcrição e números falados por extenso. <b>Toque em “Iniciar voz”, fale normalmente e toque em “Encerrar voz”. O aplicativo mostrará uma prévia para você revisar antes de salvar.</b></div>
+        <div id="voiceState" class="hint" aria-live="polite">Modo de voz: toque em <b>“Iniciar voz”</b>, fale o material e a quantidade e depois toque em <b>“Encerrar voz”</b>.</div>
+        <div id="voiceDebug" class="hint" aria-live="polite"><b>Último reconhecimento:</b> —</div>
+        <div id="voiceFeedback" class="voiceFeedback idle" aria-live="assertive">
+          <div class="voiceStatusTop"><span class="voiceDot"></span><span id="voiceModeLabel">PRONTO PARA INICIAR</span></div>
+          <div id="liveTranscript" class="liveTranscript">Toque em “Iniciar voz”.</div>
+          <div class="understanding">
+            <div><span>Material</span><b id="uMaterial" class="waitText">Aguardando</b></div>
+            <div><span>Quantidade</span><b id="uQty" class="waitText">Aguardando</b></div>
+            <div><span>Fator</span><b id="uFactor">—</b></div>
+            <div><span>Resultado</span><b id="uResult">—</b></div>
+          </div>
+        </div>
+        <div id="preview" class="preview hidden"></div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <div class="tabs"><button class="tab active" data-tab="totals">Totais por material</button><button class="tab" data-tab="history">Histórico</button><button class="tab" data-tab="config">Cadastro de voz</button></div>
+        <section id="tab-totals">
+          <div class="summary"><div class="stat"><span>Materiais MB52</span><strong id="matCount">0</strong></div><div class="stat"><span>Materiais contados</span><strong id="countedCount">0</strong></div><div class="stat"><span>Lançamentos</span><strong id="entryCount">0</strong></div></div>
+          <div class="searchRow" style="margin-top:12px"><input id="search" class="phrase" placeholder="Buscar material..."/><button id="exportBtn" class="btn">Exportar CSV</button><button id="resetBtn" class="btn danger">Limpar teste</button></div>
+          <div class="tableWrap"><table><thead><tr><th>Material</th><th>Descrição MB52</th><th>Nome p/ voz</th><th>UM</th><th class="num">Estoque MB52</th><th class="num">Contagem acumulada</th></tr></thead><tbody id="totalsBody"></tbody></table></div>
+        </section>
+        <section id="tab-history" class="hidden"><div id="historyList"></div></section>
+        <section id="tab-config" class="hidden"><div class="hint" style="margin-bottom:8px">Apelidos separados por ponto e vírgula. O fator padrão é opcional e nunca trava o valor falado.</div><div class="searchRow"><input id="configSearch" class="phrase" placeholder="Filtrar por código, descrição, nome de voz ou apelido..."/><select id="configUm" class="btn"><option value="">Todas as UM</option><option value="KG">KG</option><option value="UN">UN</option></select><button id="configClear" class="btn">Limpar filtro</button></div><div id="configFilterInfo" class="hint" style="margin-bottom:8px"></div><div id="configList" class="configList"></div></section>
+      </div>
+    </div>
+
+    <div>
+      <div class="card"><h2>Como a regra está funcionando</h2>
+        <div class="kv"><b>Códigos SAP</b><span>Ignora códigos finais como <code>(45000576)</code>, <code>85.181.068</code> e códigos longos tipo <code>21-5138141</code>.</span><b>Especificações</b><span>Mantém números como <code>30X10</code>, <code>550MM</code>, <code>100G</code> e <code>250G</code>.</span><b>Fator</b><span>O fator falado prevalece. O fator padrão só é usado quando você não disser um fator.</span><b>Acúmulo</b><span>Cada salvamento cria um lançamento e soma ao total do material.</span><b>Fluxo por botões</b><span>Toque em <code>Iniciar voz</code>, fale a contagem e depois toque em <code>Encerrar voz</code>. Revise a prévia antes de salvar.</span><b>Salvamento</b><span>A voz nunca salva sozinha. O botão <code>Salvar contagem</code> confirma o lançamento.</span><b>Desfazer</b><span>Excluir uma entrada do histórico recalcula o total automaticamente.</span></div>
+      </div>
+      <div class="card" style="margin-top:16px"><h2>Frases para testar</h2><div class="hint" style="font-size:13px;line-height:1.8">• “caixinha granel 125 anos 100 gramas 85 caixas vezes 700”<br>• repita depois com “40 caixas vezes 710”<br>• depois “20 caixas vezes 650”<br>• “adesivo pva c 513 3 quilos”<br>• depois “adesivo pva c 513 2,5 quilos”<br>• “papel filtro 25 unidades vezes 8,2 kg” (se existir no MB52)<br>• “adesivo pva c 513 2,5 quilos”</div></div>
+      <div class="card" style="margin-top:16px"><h2>Observação do protótipo</h2><div class="hint" style="font-size:13px;line-height:1.6">A UM foi sugerida automaticamente apenas para facilitar o teste. Na versão integrada ao aplicativo, a UM deve vir do cadastro/MB52/LT correto. Você pode alterar a UM na aba <b>Cadastro de voz</b>.</div></div>
+    </div>
+  </div>
+  <div class="footer">Este arquivo roda localmente no navegador. Fluxo: Iniciar voz → falar → Encerrar voz → revisar → Salvar contagem. Os lançamentos ficam no localStorage deste aparelho.</div>
+</div>
+<div id="toast" class="toast hidden"></div>
+<script>
+const MATERIALS = [{"material":"40001227","descricao":"ADESIVO PVA C-513","estoque":7.634,"um_sugerida":"KG"},{"material":"30002201","descricao":"AROMA DE GUARANÁ (5055086700039999)","estoque":17.0,"um_sugerida":"KG"},{"material":"30000120","descricao":"AROMA IN DE CANELA LÍQUIDO 85.181.068","estoque":3.0,"um_sugerida":"KG"},{"material":"30000125","descricao":"AROMA IN DE LARANJA 85.454.048","estoque":15.0,"um_sugerida":"KG"},{"material":"30000127","descricao":"AROMA IN DE LIMÃO 85.487.108","estoque":24.8,"um_sugerida":"KG"},{"material":"30000136","descricao":"AROMA IN DE PÊSSEGO 85.652.176","estoque":1.0,"um_sugerida":"KG"},{"material":"30001801","descricao":"BLEND ABACAXI + HORTELA (45002673)","estoque":1075.0,"um_sugerida":"KG"},{"material":"30002195","descricao":"BLEND AÇAÍ + GUARANA VIT CB (45023509)","estoque":400.0,"um_sugerida":"KG"},{"material":"30002215","descricao":"BLEND CAMOMILA, BAUNILHA E MEL","estoque":160.0,"um_sugerida":"KG"},{"material":"30002052","descricao":"BLEND CHA AMO+MIR+BAU (45010035)","estoque":25.0,"um_sugerida":"KG"},{"material":"30001626","descricao":"BLEND CHA FRUTAS VERM PREMIUM (45002845)","estoque":300.0,"um_sugerida":"KG"},{"material":"30002054","descricao":"BLEND CHA LAR+MAR+GENG (45010033)","estoque":350.0,"um_sugerida":"KG"},{"material":"30001935","descricao":"BLEND CHA MORANGO + LARANJA (45007834)","estoque":275.0,"um_sugerida":"KG"},{"material":"30001848","descricao":"BLEND CHA MORANGO + MARACUJA (45006143)","estoque":100.0,"um_sugerida":"KG"},{"material":"30001800","descricao":"BLEND CHA PRETO + PESSEGO (45000919)","estoque":558.0,"um_sugerida":"KG"},{"material":"30001220","descricao":"BLEND CHA PRETO+FRUTAS VERM (45000975)","estoque":580.0,"um_sugerida":"KG"},{"material":"30001849","descricao":"BLEND CHA VERDE+GENGIBRE+LIMAO(45000140)","estoque":613.0,"um_sugerida":"KG"},{"material":"30002095","descricao":"BLEND CHE MENOP AMO+LAR 45017809","estoque":425.0,"um_sugerida":"KG"},{"material":"30000590","descricao":"BLEND DE CANELA MOIDA (17800034)","estoque":397.0,"um_sugerida":"KG"},{"material":"30000588","descricao":"BLEND DE CASCA DE LARANJA (16400090)","estoque":27.92,"um_sugerida":"KG"},{"material":"30000587","descricao":"BLEND DE CASCA DE LIMAO (18000060)","estoque":150.0,"um_sugerida":"KG"},{"material":"30000140","descricao":"BLEND DE CHÁ PRETO","estoque":333.3,"um_sugerida":"KG"},{"material":"30000589","descricao":"BLEND DE PESSEGO DESIDRATADO (39000087)","estoque":34.03,"um_sugerida":"KG"},{"material":"30002174","descricao":"BLEND LARANJA VIT (45022249)","estoque":259.0,"um_sugerida":"KG"},{"material":"30002094","descricao":"BLEND MAMA SERENA ALCA+FUN+MELI 45017810","estoque":3.0,"um_sugerida":"KG"},{"material":"30002175","descricao":"BLEND MEL, GENG E CUR VIT (45023452)","estoque":400.0,"um_sugerida":"KG"},{"material":"30000568","descricao":"BLEND P/ CHA BOA NOITE (45000576)","estoque":447.0,"um_sugerida":"KG"},{"material":"30000693","descricao":"BLEND P/ CHA BOLDO (21100016)","estoque":300.0,"um_sugerida":"KG"},{"material":"30000619","descricao":"BLEND P/ CHA CAMOMILA (11200615)","estoque":180.0,"um_sugerida":"KG"},{"material":"30000620","descricao":"BLEND P/ CHA CAPIM-CIDREIRA (17900037)","estoque":90.0,"um_sugerida":"KG"},{"material":"30000584","descricao":"BLEND P/ CHA CITRICO (45003218)","estoque":275.0,"um_sugerida":"KG"},{"material":"30000586","descricao":"BLEND P/ CHA ERVA DOCE (15000077)","estoque":565.0,"um_sugerida":"KG"},{"material":"30000569","descricao":"BLEND P/ CHA HORTELA (11000419)","estoque":25.0,"um_sugerida":"KG"},{"material":"30000582","descricao":"BLEND P/ CHA MORANGO (45003216)","estoque":350.0,"um_sugerida":"KG"},{"material":"30002096","descricao":"BLEND P/ CHA RELAXA (45017808)","estoque":375.0,"um_sugerida":"KG"},{"material":"30000583","descricao":"BLEND P/ CHA SILVESTRE (45003217)","estoque":350.0,"um_sugerida":"KG"},{"material":"30002164","descricao":"BLEND PARA CHÁ ERVA-DOCE + FUNCHO 50-50","estoque":275.0,"um_sugerida":"KG"},{"material":"30002154","descricao":"BLEND PESSEGO DRINKS (45024306)","estoque":100.0,"um_sugerida":"KG"},{"material":"30001704","descricao":"BLEND REEQUILIBR CHA VERD C/HOR 45001641","estoque":261.0,"um_sugerida":"KG"},{"material":"30002092","descricao":"BLEND XO TPM CER+MOR+BAU 45017812","estoque":525.0,"um_sugerida":"KG"},{"material":"40004826","descricao":"CAIX KIDS MOR+MA 10UN (21-3664519) EC24","estoque":55010.0,"um_sugerida":"UN"},{"material":"40005099","descricao":"CAIX VIT AÇA+GUA 10UN RF EC24 21-4486634","estoque":100.0,"um_sugerida":"UN"},{"material":"40003498","descricao":"CAIXA MATE GRANEL 30X250G (GAR18-00752)","estoque":2400.0,"um_sugerida":"UN"},{"material":"40005280","descricao":"CAIXI CAM,MEL E BAUN 10UN EC24 215070611","estoque":46080.0,"um_sugerida":"UN"},{"material":"40004858","descricao":"CAIXI CHEG MENOP AMO+LAR 10UN 21-3758271","estoque":403.0,"um_sugerida":"UN"},{"material":"40004806","descricao":"CAIXI CID+LAR+LIM 10UN (21-3664148) EC24","estoque":16560.0,"um_sugerida":"UN"},{"material":"40004819","descricao":"CAIXI MAT NATURAL 15UN (21-3664890) EC24","estoque":27000.0,"um_sugerida":"UN"},{"material":"40004805","descricao":"CAIXI ROS+HIB+AMO 10UN (21-3664188) EC24","estoque":32400.0,"um_sugerida":"UN"},{"material":"40005100","descricao":"CAIXI VIT LAR 10UN RF EC24 21-4486714","estoque":6550.0,"um_sugerida":"UN"},{"material":"40005101","descricao":"CAIXI VIT MEL+GEN 10UN RF EC24 214486754","estoque":70499.0,"um_sugerida":"UN"},{"material":"40004745","descricao":"CAIXI XO TPM CER+MOR+BAU 10UN 21-3758311","estoque":15750.0,"um_sugerida":"UN"},{"material":"40004807","descricao":"CAIXIN AMO+MIR+BAUN 10UN 21-3664068 EC24","estoque":17280.0,"um_sugerida":"KG"},{"material":"40004774","descricao":"CAIXIN CB ABCX+HORT 10UN (21-3361755) RC","estoque":33000.0,"um_sugerida":"KG"},{"material":"40004800","descricao":"CAIXIN FRUTA VERM 10UN (21-3663593) EC24","estoque":36000.0,"um_sugerida":"KG"},{"material":"40004804","descricao":"CAIXIN MACA CANEL 10UN (21-3663753) EC24","estoque":27560.0,"um_sugerida":"KG"},{"material":"40004818","descricao":"CAIXIN MAR+LAR+GENG 10UN 21-3664228 EC24","estoque":13971.015,"um_sugerida":"KG"},{"material":"40005020","descricao":"CAIXINH CAM+CID+MAR 15UN 21-4226713 ACMA","estoque":28500.0,"um_sugerida":"KG"},{"material":"40005184","descricao":"CAIXINH ERVA DOCE 10UN (21-4759933) O RF","estoque":106500.0,"um_sugerida":"KG"},{"material":"40005025","descricao":"CAIXINHA BOLDO 10UN (21-4369931) OPT","estoque":58220.0,"um_sugerida":"UN"},{"material":"40005021","descricao":"CAIXINHA CAMOMILA 10UN (21-4370011) OPT","estoque":8900.0,"um_sugerida":"UN"},{"material":"40005135","descricao":"CAIXINHA CAMOMILA 10UN (21-4748564) G","estoque":56000.0,"um_sugerida":"UN"},{"material":"40004823","descricao":"CAIXINHA CAMOMILA 15UN (21-3664650) EC24","estoque":13969.0,"um_sugerida":"UN"},{"material":"40004938","descricao":"CAIXINHA CAMOMILA 15UN (21-3972900) RC","estoque":24050.0,"um_sugerida":"UN"},{"material":"40004943","descricao":"CAIXINHA CB CP+FR VER 10UN 21-3980921 NM","estoque":24000.0,"um_sugerida":"UN"},{"material":"40004775","descricao":"CAIXINHA CB CP+PÊSS 10UN (21-3361795) RC","estoque":2227.0,"um_sugerida":"UN"},{"material":"40004942","descricao":"CAIXINHA CB CV+GEN+LI 10UN 21-3980885 NM","estoque":3000.0,"um_sugerida":"UN"},{"material":"40004944","descricao":"CAIXINHA CB MORAN+LAR 10UN 21-3980841 NM","estoque":21850.0,"um_sugerida":"UN"},{"material":"40005389","descricao":"CAIXINHA CB MORANGO E LARANJA TV","estoque":7200.0,"um_sugerida":"UN"},{"material":"40005027","descricao":"CAIXINHA CHÁ PRETO 10UN (21-4370051) OPT","estoque":50.0,"um_sugerida":"UN"},{"material":"40005022","descricao":"CAIXINHA CIDREIRA 10UN (21-4370131) OPT","estoque":63410.0,"um_sugerida":"UN"},{"material":"40004820","descricao":"CAIXINHA CIDREIRA 15UN (21-3664770) EC24","estoque":66000.0,"um_sugerida":"UN"},{"material":"40004969","descricao":"CAIXINHA CIDREIRA 15UN (21-4007666)RC","estoque":37000.0,"um_sugerida":"UN"},{"material":"40004957","descricao":"CAIXINHA CIDREIRA 25UN (21-3952795)","estoque":37370.0,"um_sugerida":"UN"},{"material":"40005050","descricao":"CAIXINHA DRK PESSEG 10UN 21-4486288 EC24","estoque":39000.0,"um_sugerida":"UN"},{"material":"40004970","descricao":"CAIXINHA ERVA DOCE 15UN (21-4007746)RC","estoque":64832.0,"um_sugerida":"KG"},{"material":"40005358","descricao":"CAIXINHA GRANEL 125ANOS 100G 21-5138141","estoque":25349.96,"um_sugerida":"UN"},{"material":"40005360","descricao":"CAIXINHA GRANEL 125ANOS 250G 21-5137808","estoque":8123.0,"um_sugerida":"UN"},{"material":"40004821","descricao":"CAIXINHA HORTELA 15UN (21-3664850) EC24","estoque":13800.0,"um_sugerida":"UN"},{"material":"40005024","descricao":"CAIXINHA HORTELÃ 10UN (21-4370211) OPT","estoque":144130.0,"um_sugerida":"UN"},{"material":"40004971","descricao":"CAIXINHA HORTELÃ 15UN (21-4007710)RC","estoque":1608.0,"um_sugerida":"UN"},{"material":"40004959","descricao":"CAIXINHA HORTELÃ 25UN (21-3952759)","estoque":7200.0,"um_sugerida":"UN"},{"material":"40004939","descricao":"CAIXINHA MATE GRANEL 100G (21-3980689)","estoque":3500.0,"um_sugerida":"UN"},{"material":"40004940","descricao":"CAIXINHA MATE GRANEL 250G (21-3980733)","estoque":20800.0,"um_sugerida":"UN"},{"material":"40004960","descricao":"CAIXINHA MATE NATURAL 25UN (21-3953090)","estoque":15700.0,"um_sugerida":"UN"},{"material":"40004961","descricao":"CAIXINHA MATE+CANELA 25UN (21-3952930)","estoque":4800.0,"um_sugerida":"UN"},{"material":"40004962","descricao":"CAIXINHA MATE+LARANJA 25UN (21-3953010)","estoque":30150.0,"um_sugerida":"UN"},{"material":"40004964","descricao":"CAIXINHA MATE+LIMÃO 25UN (21-3953050)","estoque":15000.0,"um_sugerida":"UN"},{"material":"40004963","descricao":"CAIXINHA MATE+PESSEGO 25UN (21-3952974)","estoque":33600.0,"um_sugerida":"UN"},{"material":"40004802","descricao":"CAIXINHA MORANGO 10UN (21-3663793) EC24","estoque":25920.0,"um_sugerida":"UN"},{"material":"40004920","descricao":"CAIXINHA REEQUILIBRA (21-3841851) EC24","estoque":22500.0,"um_sugerida":"UN"},{"material":"40004974","descricao":"CAIXINHA RELAXA 10UN (21-4006312) EC24","estoque":61500.0,"um_sugerida":"UN"},{"material":"40003339","descricao":"CANTONEIRA 50 X 50 X 2 X 2000 mm","estoque":406.763,"um_sugerida":"KG"},{"material":"40003340","descricao":"CANTONEIRA 50 X 50 X 2 X 2100 MM","estoque":69.5,"um_sugerida":"KG"},{"material":"40002170","descricao":"CHAPA PAPELAO 1175 X 975MM CANTO RETO","estoque":20.426,"um_sugerida":"KG"},{"material":"40000760","descricao":"COLA HOT MELT","estoque":0.858,"um_sugerida":"KG"},{"material":"40005350","descricao":"COLA HOT MELT EUROMELT 362 BR","estoque":0.576,"um_sugerida":"KG"},{"material":"40005371","descricao":"COLA HOT MELT EUROMELT 362 BR","estoque":100.0,"um_sugerida":"KG"},{"material":"40005269","descricao":"CX MATTE COM GUARANÁ 25UN EC12 215070510","estoque":18000.0,"um_sugerida":"UN"},{"material":"40005398","descricao":"ENV BOPP CB MORANGO E LARANJA TV","estoque":25.68,"um_sugerida":"KG"},{"material":"40005260","descricao":"ENV PAP CAM, BAUN E MEL EC24(21-5070655)","estoque":0.015,"um_sugerida":"KG"},{"material":"40004869","descricao":"ENV PAP CH MENOP AMO+LAR 21-3758431 EC24","estoque":2.57,"um_sugerida":"KG"},{"material":"40005054","descricao":"ENV PAP DRINKS PESSEGO 21-4486368 EC24","estoque":129.35,"um_sugerida":"KG"},{"material":"40004983","descricao":"ENV PAP FUNC REEQUILIBRA 21-4076122 EC24","estoque":102.82,"um_sugerida":"KG"},{"material":"40004866","descricao":"ENV PAP TPM CER+MOR+BAU 21-3758471 EC24","estoque":73.9,"um_sugerida":"KG"},{"material":"40004865","descricao":"ENV PAPEL RELAXA 21-4006356 EC24","estoque":147.805,"um_sugerida":"KG"},{"material":"40005103","descricao":"ENVE PAP VIT AÇAÍ+GUA RF EC24 21-4486794","estoque":122.055,"um_sugerida":"KG"},{"material":"40005104","descricao":"ENVE PAP VIT LAR RF EC24 21-4486834","estoque":33.69,"um_sugerida":"KG"},{"material":"40005105","descricao":"ENVE PAP VIT MEL+GEN RF EC24 21-4486678","estoque":2.45,"um_sugerida":"KG"},{"material":"40004845","descricao":"ENVE PAPE KIDS MOR+MA (21-3664443) EC24","estoque":144.825,"um_sugerida":"KG"},{"material":"40004816","descricao":"ENVE PAPEL AMO+MIR+BAU (21-3664268) EC24","estoque":89.996,"um_sugerida":"KG"},{"material":"40004815","descricao":"ENVE PAPEL CID+LAR+LIM (21-3664308) EC24","estoque":54.02,"um_sugerida":"KG"},{"material":"40004817","descricao":"ENVE PAPEL MAR+LAR+GEN (21-3664112) EC24","estoque":136.75,"um_sugerida":"KG"},{"material":"40004838","descricao":"ENVE PAPEL MAT NATURAL (21-3664694) EC24","estoque":120.81,"um_sugerida":"KG"},{"material":"40004814","descricao":"ENVE PAPEL ROS+HIB+AMO (21-3664348) EC24","estoque":2.335,"um_sugerida":"KG"},{"material":"40004842","descricao":"ENVEL PAPEL CAMOMILA (21-3664970) EC24","estoque":123.42,"um_sugerida":"KG"},{"material":"40004839","descricao":"ENVEL PAPEL CIDREIRA (21-3665050) EC24","estoque":150.12,"um_sugerida":"KG"},{"material":"40004809","descricao":"ENVEL PAPEL FRUTA VERM (21-3663833) EC24","estoque":150.15,"um_sugerida":"KG"},{"material":"40004840","descricao":"ENVEL PAPEL HORTELA (21-3665090) EC24","estoque":107.73,"um_sugerida":"KG"},{"material":"40004813","descricao":"ENVEL PAPEL MACA CANEL (21-3663953) EC24","estoque":59.28,"um_sugerida":"KG"},{"material":"40004811","descricao":"ENVEL PAPEL MORANGO (21-3663637) EC24","estoque":122.9,"um_sugerida":"KG"},{"material":"40004233","descricao":"ENVELOPE BOPP ABAC+HORT (20-2261383)","estoque":22.0,"um_sugerida":"KG"},{"material":"40004599","descricao":"ENVELOPE BOPP CAM CID MAR (21-2975106)N","estoque":1.805,"um_sugerida":"UN"},{"material":"40004619","descricao":"ENVELOPE BOPP CAMOMILA (GAR21-2921367)","estoque":25.47,"um_sugerida":"KG"},{"material":"40004621","descricao":"ENVELOPE BOPP CIDREIRA (GAR21-2921407)","estoque":196.77,"um_sugerida":"UN"},{"material":"40004523","descricao":"ENVELOPE BOPP CP FRUT VERM(21-2807742)NM","estoque":100.52,"um_sugerida":"KG"},{"material":"40004237","descricao":"ENVELOPE BOPP CP+PESSEGO(20-2261503)","estoque":5.06,"um_sugerida":"UN"},{"material":"40004524","descricao":"ENVELOPE BOPP CV GENG+LIM (21-2807862)NM","estoque":5.045,"um_sugerida":"UN"},{"material":"40004479","descricao":"ENVELOPE BOPP ERVA DOCE (21-2728919)","estoque":181.95,"um_sugerida":"KG"},{"material":"40004622","descricao":"ENVELOPE BOPP HORTELA (GAR21-2920971)","estoque":35.02,"um_sugerida":"UN"},{"material":"40004533","descricao":"ENVELOPE BOPP MORAN+LAR (21-2807251) NM","estoque":18.0,"um_sugerida":"KG"},{"material":"10000102","descricao":"ERVA AROMATIZADA DE CANELA","estoque":527.0,"um_sugerida":"KG"},{"material":"10001367","descricao":"ERVA AROMATIZADA DE GUARANÁ","estoque":1440.0,"um_sugerida":"KG"},{"material":"10000103","descricao":"ERVA AROMATIZADA DE LARANJA","estoque":934.2,"um_sugerida":"KG"},{"material":"10000104","descricao":"ERVA AROMATIZADA DE LIMÃO","estoque":185.0,"um_sugerida":"KG"},{"material":"10000105","descricao":"ERVA AROMATIZADA DE PÊSSEGO","estoque":1218.2,"um_sugerida":"KG"},{"material":"10000932","descricao":"ERVA MATE CASCA DE TALO TORRADA","estoque":6381.94,"um_sugerida":"KG"},{"material":"10000108","descricao":"ERVA MATE CHILE TORRADO","estoque":3360.0,"um_sugerida":"KG"},{"material":"10000109","descricao":"ERVA MATE TALINHO TORRADO","estoque":1361.2,"um_sugerida":"KG"},{"material":"10000111","descricao":"ERVA MATE TORRADA CHILENA","estoque":947.6,"um_sugerida":"KG"},{"material":"10000146","descricao":"ERVA PENEIRADA DE NATURAL","estoque":1091.0,"um_sugerida":"KG"},{"material":"40004331","descricao":"ETIQ BIPACK CB ABACAXI+HORTELÃ 2X10 NAD","estoque":1000.0,"um_sugerida":"UN"},{"material":"40004329","descricao":"ETIQ BIPACK CB ABACAXI+HORTELÃ 6X2X10NAD","estoque":250.0,"um_sugerida":"UN"},{"material":"40004872","descricao":"ETIQ BIPACK CB MOR+LAR 2X10 NAD","estoque":2603.0,"um_sugerida":"UN"},{"material":"40004873","descricao":"ETIQ BIPACK CB MOR+LAR 6X2X10 N/AD","estoque":1461.0,"um_sugerida":"UN"},{"material":"40000345","descricao":"ETIQ BOLDO 30X10 NÃO ADESIVA MARROM","estoque":3669.0,"um_sugerida":"UN"},{"material":"40005281","descricao":"ETIQ CAM, MEL E BAUN 20X10 N/AD EC24","estoque":1600.0,"um_sugerida":"UN"},{"material":"40000741","descricao":"ETIQ CAMOMILA 10X10 NÃO ADESIVA AMARELA","estoque":1500.0,"um_sugerida":"UN"},{"material":"40000358","descricao":"ETIQ CAMOMILA 30X10 NÃO ADESIVA AMARELA","estoque":400.0,"um_sugerida":"UN"},{"material":"40000359","descricao":"ETIQ CAMOMILA 36X15 NÃO ADESIVA AMARELA","estoque":670.0,"um_sugerida":"UN"},{"material":"40004481","descricao":"ETIQ CANELA 10X25 N/AD ROSA LIS VERM","estoque":500.0,"um_sugerida":"UN"},{"material":"40004480","descricao":"ETIQ CANELA 30X25 N/AD ROSA","estoque":309.0,"um_sugerida":"UN"},{"material":"40000364","descricao":"ETIQ CAPIM CIDREIRA 10X10 N ADESIVA AZUL","estoque":2500.0,"um_sugerida":"UN"},{"material":"40000365","descricao":"ETIQ CAPIM CIDREIRA 36X15 N ADESIVA AZUL","estoque":2900.0,"um_sugerida":"UN"},{"material":"40004235","descricao":"ETIQ CB ABAC+HORT 10X12 N/AD AMARELA LIS","estoque":3958.0,"um_sugerida":"UN"},{"material":"40003866","descricao":"ETIQ CB CP FRUT FLO 10X12 N/AD ROXO LIS","estoque":1000.0,"um_sugerida":"UN"},{"material":"40004239","descricao":"ETIQ CB CP+PESSEGO 10X12 N/AD CINZA LIS","estoque":0.002,"um_sugerida":"UN"},{"material":"40003865","descricao":"ETIQ CB CV LIM+GEN 10X12 N/AD VERDE LIS","estoque":3391.0,"um_sugerida":"UN"},{"material":"40004513","descricao":"ETIQ CB MORAN+LAR 10X12 N/AD","estoque":497.0,"um_sugerida":"UN"},{"material":"40004863","descricao":"ETIQ CHEG MENOPAUSA AMO+LAR 12X10 N/AD","estoque":1500.0,"um_sugerida":"UN"},{"material":"40000370","descricao":"ETIQ CHÁ BOA NOITE 36X15 N ADESIVA AZUL","estoque":1600.0,"um_sugerida":"UN"},{"material":"40000582","descricao":"ETIQ CHÁ PRETO 10X10 NÃO ADESIVA BRANCA","estoque":1000.0,"um_sugerida":"UN"},{"material":"40004113","descricao":"ETIQ CID+LAR+LIM 20X10 NAO ADESIVA VERDE","estoque":1200.0,"um_sugerida":"UN"},{"material":"40000409","descricao":"ETIQ CIDREIRA 30X10 NÃO ADESIVA AZUL","estoque":2900.0,"um_sugerida":"UN"},{"material":"40005052","descricao":"ETIQ DRINKS PESSEGO 12X10 N/AD","estoque":1650.0,"um_sugerida":"UN"},{"material":"40004485","descricao":"ETIQ ERVA DOCE 10X10 N/AD VERDE LIS VERM","estoque":2300.0,"um_sugerida":"UN"},{"material":"40004484","descricao":"ETIQ ERVA DOCE 30X10 N/AD VERDE LIS ROXO","estoque":2715.0,"um_sugerida":"UN"},{"material":"40004487","descricao":"ETIQ ERVA DOCE 36X15 NAD VERDE LIS AREIA","estoque":500.0,"um_sugerida":"UN"},{"material":"40004720","descricao":"ETIQ FF AMO + MIR + BAU 20X10 N/AD","estoque":1200.0,"um_sugerida":"UN"},{"material":"40004721","descricao":"ETIQ FF MAR + LAR + GEN 20X10 N/AD","estoque":800.0,"um_sugerida":"UN"},{"material":"40003883","descricao":"ETIQ FRUT VERM 20X10 N ADESIVA VERMELHA","estoque":1500.0,"um_sugerida":"UN"},{"material":"40004112","descricao":"ETIQ HIB+ROS+AMO 20X10 NAO/AD MARROM","estoque":1500.0,"um_sugerida":"UN"},{"material":"40000742","descricao":"ETIQ HORTELÃ 10X10 NÃO ADESIVA AZUL","estoque":100.0,"um_sugerida":"UN"},{"material":"40000595","descricao":"ETIQ HORTELÃ 18X2X15 NÃO ADESIVA AZUL","estoque":500.0,"um_sugerida":"UN"},{"material":"40000596","descricao":"ETIQ HORTELÃ 2X15 ADESIVA BRANCA","estoque":1000.0,"um_sugerida":"UN"},{"material":"40000417","descricao":"ETIQ HORTELÃ 30X10 NÃO ADESIVA AZUL","estoque":40.871,"um_sugerida":"UN"},{"material":"40000418","descricao":"ETIQ HORTELÃ 36X15 NÃO ADESIVA AZUL","estoque":439.0,"um_sugerida":"UN"},{"material":"40004462","descricao":"ETIQ KIDS MORANGO+MARACUJÁ N/AD MARROM","estoque":3350.0,"um_sugerida":"UN"},{"material":"40000598","descricao":"ETIQ LARANJA 10X25 NÃO ADESIVA LARANJA","estoque":440.0,"um_sugerida":"UN"},{"material":"40000420","descricao":"ETIQ LARANJA 30X25 NÃO ADESIVA LARANJA","estoque":400.0,"um_sugerida":"UN"},{"material":"40004483","descricao":"ETIQ LIMÃO 10X25 N/AD VERDE LIS VERM","estoque":750.0,"um_sugerida":"UN"},{"material":"40004482","descricao":"ETIQ LIMÃO 30X25 N/AD VERDE","estoque":2900.0,"um_sugerida":"UN"},{"material":"40004862","descricao":"ETIQ MAMA SERENA ALC+FUN+MELI 12X10 N/AD","estoque":837.0,"um_sugerida":"UN"},{"material":"40005272","descricao":"ETIQ MATTE COM GUARANÁ 25X30 N/AD EC12","estoque":1261.0,"um_sugerida":"UN"},{"material":"40000744","descricao":"ETIQ MAÇÃ 10X10 NÃO ADESIVA VERMELHA","estoque":215.492,"um_sugerida":"UN"},{"material":"40000745","descricao":"ETIQ MORANGO 10X10 NÃO ADESIVA ROSA","estoque":150.0,"um_sugerida":"UN"},{"material":"40004078","descricao":"ETIQ MORANGO 20X10 NAO ADESIVA ROSA","estoque":100.0,"um_sugerida":"UN"},{"material":"40000436","descricao":"ETIQ NATURAL  36X15 NÃO ADESIVA MARROM","estoque":600.0,"um_sugerida":"UN"},{"material":"40000437","descricao":"ETIQ NATURAL 10X25 NÃO ADESIVA MARROM","estoque":750.0,"um_sugerida":"UN"},{"material":"40000438","descricao":"ETIQ NATURAL 30X25 NÃO ADESIVA MARROM","estoque":8199.995,"um_sugerida":"UN"},{"material":"40000617","descricao":"ETIQ PÊSSEGO 10X25 NÃO ADESIVA AMARELA","estoque":1088.0,"um_sugerida":"UN"},{"material":"40000440","descricao":"ETIQ PÊSSEGO 30X25 NÃO ADESIVA AMARELA","estoque":1346.0,"um_sugerida":"UN"},{"material":"40004043","descricao":"ETIQ REEQUILIBRA 10X12 N/ ADESIVA CINZA","estoque":2500.0,"um_sugerida":"UN"},{"material":"40004045","descricao":"ETIQ RELAXA 10X12 NAO ADESIVA LILAS","estoque":2700.0,"um_sugerida":"UN"},{"material":"40004662","descricao":"ETIQ VIT. ACAI E GUARANA N/AD","estoque":70.0,"um_sugerida":"UN"},{"material":"40005138","descricao":"ETIQ VIT. LARANJA 12X10 N/AD","estoque":100.0,"um_sugerida":"UN"},{"material":"40004663","descricao":"ETIQ VIT. MEL GENG E CURCUMA N/AD","estoque":2350.0,"um_sugerida":"UN"},{"material":"40004860","descricao":"ETIQ XO TPM CER+MOR+BAU 12X10 N/AD","estoque":1500.0,"um_sugerida":"UN"},{"material":"40000649","descricao":"ETIQ. CIDREIRA 30X25 NÃO ADESIVA AZUL","estoque":150.0,"um_sugerida":"UN"},{"material":"40000655","descricao":"ETIQ. HORTELÃ 30X25 NÃO ADESIVA AZUL","estoque":425.0,"um_sugerida":"UN"},{"material":"40000450","descricao":"FILME PE TERMOCONTRÁTIL 200MM","estoque":19.673,"um_sugerida":"KG"},{"material":"40005122","descricao":"FILME PE TERMOCONTRÁTIL 340MM","estoque":16.99,"um_sugerida":"UN"},{"material":"40003974","descricao":"FILME PE TERMOCONTRÁTIL 460MM","estoque":34.72,"um_sugerida":"UN"},{"material":"40004394","descricao":"FILME PE TERMOCONTRÁTIL 530MM","estoque":50.182,"um_sugerida":"UN"},{"material":"40000453","descricao":"FILME PE TERMOCONTRÁTIL 550MM","estoque":64.353,"um_sugerida":"UN"},{"material":"40004306","descricao":"FILME PEAD LARGURA 332MM X 0,024MM","estoque":265.16,"um_sugerida":"UN"},{"material":"40003341","descricao":"FILME POLIPROPILENO 205MM","estoque":61.909,"um_sugerida":"UN"},{"material":"40000457","descricao":"FILME POLIPROPILENO LARG. 150","estoque":42.47,"um_sugerida":"UN"},{"material":"40000675","descricao":"FILME STRETCH 20 MICRAS 500MM PESO 17 KG","estoque":0.07,"um_sugerida":"UN"},{"material":"40004780","descricao":"FIO DE ALGODAO 1,8 KG EC24","estoque":1.731,"um_sugerida":"KG"},{"material":"40000462","descricao":"FITA 38MM X 1800M L.SECA","estoque":7.0,"um_sugerida":"UN"},{"material":"40004672","descricao":"PAPEL FILTRO 125MM ABACA FREE (117/4/F)","estoque":305.483,"um_sugerida":"KG"},{"material":"40004673","descricao":"PAPEL FILTRO HOT E COLD 125MM ABACA FREE","estoque":14.391,"um_sugerida":"KG"},{"material":"30002237","descricao":"SEMENTE DE GUARANÁ","estoque":41.66,"um_sugerida":"KG"},{"material":"40004665","descricao":"TAG ACAI E GUARANA VIT. 21-3108372","estoque":9.1,"um_sugerida":"KG"},{"material":"40004904","descricao":"TAG CHEG MENOPAUSA AMO+LAR 21-3761448","estoque":27.15,"um_sugerida":"KG"},{"material":"40004977","descricao":"TAG COLD BREW MONO (21-3859893) NM","estoque":42.8,"um_sugerida":"KG"},{"material":"40005113","descricao":"TAG COLD BREW MONO (21-4306807)","estoque":21.0,"um_sugerida":"KG"},{"material":"40005056","descricao":"TAG DRINKS 21-4486252 EC24","estoque":17.7,"um_sugerida":"KG"},{"material":"40004976","descricao":"TAG KIDS MONO (21-3859842)","estoque":39.7,"um_sugerida":"KG"},{"material":"40004664","descricao":"TAG LARANJA VIT. 21-3108412","estoque":2.8,"um_sugerida":"KG"},{"material":"40004666","descricao":"TAG MEL GENG E CURCUMA VIT. 21-3108136","estoque":5.0,"um_sugerida":"KG"},{"material":"40004629","descricao":"TAG SENSORIAL LEÃO (GAR21-2971154) NM","estoque":0.0,"um_sugerida":"KG"},{"material":"40004978","descricao":"TAG SENSORIAL MULTI FRASES (21-3866687)","estoque":0.03,"um_sugerida":"KG"},{"material":"40004864","descricao":"TAG XÔ TPM CER+MOR+BAU 21-3761488","estoque":36.15,"um_sugerida":"KG"}];
+const STORE='leao_voice_proto_v2';
+const CONFIG='leao_voice_proto_cfg_v2';
+let entries=JSON.parse(localStorage.getItem(STORE)||'[]');
+let cfg=JSON.parse(localStorage.getItem(CONFIG)||'{}');
+let pending=null;
+
+function stripAccents(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+function cleanSapCodes(s){
+  s=String(s||'').trim();
+  s=s.replace(/\s*\(\s*\d{6,}\s*\)\s*$/,'');
+  s=s.replace(/\s+\d{2,3}(?:\.\d{2,3}){2,}\s*$/,'');
+  s=s.replace(/\s+\d{2,}-\d{5,}\s*$/,'');
+  return s.trim();
+}
+function normText(s){
+  let x=stripAccents(cleanSapCodes(s)).toUpperCase();
+  x=x.replace(/\bP\s*\/\s*/g,'PARA ');
+  x=x.replace(/\bN\s*\/\s*AD\b|\bN\s+AD\b|\bNAO\s+AD\b/g,'NAO ADESIVA');
+  x=x.replace(/[^A-Z0-9]+/g,' ').replace(/\s+/g,' ').trim();
+  return x;
+}
+const WORD_NUM={ZERO:0,UM:1,UMA:1,DOIS:2,DUAS:2,TRES:3,QUATRO:4,CINCO:5,SEIS:6,SETE:7,OITO:8,NOVE:9,DEZ:10,ONZE:11,DOZE:12,TREZE:13,CATORZE:14,QUATORZE:14,QUINZE:15,DEZESSEIS:16,DEZESSETE:17,DEZOITO:18,DEZENOVE:19,VINTE:20,TRINTA:30,QUARENTA:40,CINQUENTA:50,SESSENTA:60,SETENTA:70,OITENTA:80,NOVENTA:90,CEM:100,CENTO:100,DUZENTOS:200,TREZENTOS:300,QUATROCENTOS:400,QUINHENTOS:500,SEISCENTOS:600,SETECENTOS:700,OITOCENTOS:800,NOVECENTOS:900};
+function numberWordsToDigits(input){
+  const arr=stripAccents(String(input||'')).toUpperCase().replace(/[^A-Z0-9.,]+/g,' ').trim().split(/\s+/);
+  const out=[];
+  for(let i=0;i<arr.length;){
+    if(WORD_NUM[arr[i]]==null){out.push(arr[i]);i++;continue}
+    let total=0,j=i,used=false;
+    while(j<arr.length){
+      const w=arr[j];
+      if(WORD_NUM[w]!=null){total+=WORD_NUM[w];used=true;j++;continue}
+      if(w==='E'&&j+1<arr.length&&WORD_NUM[arr[j+1]]!=null){j++;continue}
+      break
+    }
+    if(used){out.push(String(total));i=j}else{out.push(arr[i]);i++}
+  }
+  return out.join(' ');
+}
+function spokenNorm(s){
+  s=stripAccents(String(s||'').toLowerCase());
+  // Converte números falados simples/compostos: "oitenta e cinco" -> 85.
+  s=numberWordsToDigits(s).toLowerCase();
+  s=s.replace(/(\d+)\s*(?:virgula|ponto)\s*(\d+)/g,'$1.$2');
+  s=s.replace(/\bquilos?\b|\bquilogramas?\b|\bkgs?\b/g,'kg');
+  s=s.replace(/\bunidades?\b/g,'un');
+  s=s.replace(/\bvezes\b|\bmultiplicad[oa]\s+por\b|\bmultiplica\s+por\b/g,' x ');
+  s=s.replace(/\bcom\s+(\d+(?:[.,]\d+)?)\s+em\s+cada\b/g,' x $1 ');
+  s=s.replace(/\s+/g,' ').trim();
+  return s;
+}
+function voiceName(m){return cleanSapCodes(m.descricao)}
+function getCfg(mat){return cfg[mat]||{aliases:'',factor:'',um:MATERIALS.find(x=>x.material===mat)?.um_sugerida||'KG'}}
+function saveCfg(){localStorage.setItem(CONFIG,JSON.stringify(cfg))}
+const TOKEN_EQUIV={
+  CAIX:'CAIXA',CAIXI:'CAIXA',CAIXIN:'CAIXA',CAIXINH:'CAIXA',CAIXINHA:'CAIXA',CAIXA:'CAIXA',
+  ETIQ:'ETIQUETA',ETIQ:'ETIQUETA',ETIQUETA:'ETIQUETA',
+  CAM:'CAMOMILA',CAMOM:'CAMOMILA',CAMOMILA:'CAMOMILA',
+  CID:'CIDREIRA',CIDREIRA:'CIDREIRA',CAPIM:'CAPIM',
+  HORT:'HORTELA',HORTELA:'HORTELA',
+  MOR:'MORANGO',MORAN:'MORANGO',MORANGO:'MORANGO',
+  LAR:'LARANJA',LARANJA:'LARANJA',
+  LIM:'LIMAO',LIMAO:'LIMAO',
+  GENG:'GENGIBRE',GENGIBRE:'GENGIBRE',
+  BAU:'BAUNILHA',BAUN:'BAUNILHA',BAUNILHA:'BAUNILHA',
+  PESSEG:'PESSEGO',PESSEGO:'PESSEGO',
+  FRUT:'FRUTAS',FRUTA:'FRUTAS',FRUTAS:'FRUTAS',VERM:'VERMELHAS',VERMELHA:'VERMELHAS',VERMELHAS:'VERMELHAS',
+  TERMOCONTRATIL:'TERMOCONTRATIL',TERMOCONTRATIL:'TERMOCONTRATIL',
+  AD:'ADESIVA',ADES:'ADESIVA',ADESIVA:'ADESIVA',
+  OPT:'OPTIMA',OPTIMA:'OPTIMA',
+  CHA:'CHA',CHÁ:'CHA'
+};
+const STOP_TOKENS=new Set(['DE','DA','DO','DAS','DOS','E','PARA','COM','EM','CADA','CAIXAS','CAIXA','QUILO','QUILOS','KG','UN','UNIDADE','UNIDADES','VEZES','X','POR']);
+function canonicalToken(t){return TOKEN_EQUIV[t]||t}
+function tokens(s){return normText(s).split(' ').filter(x=>x.length>1).map(canonicalToken)}
+function lev(a,b){
+  if(a===b)return 0;if(!a.length)return b.length;if(!b.length)return a.length;
+  const prev=Array.from({length:b.length+1},(_,i)=>i),cur=Array(b.length+1);
+  for(let i=1;i<=a.length;i++){cur[0]=i;for(let j=1;j<=b.length;j++)cur[j]=Math.min(cur[j-1]+1,prev[j]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));for(let j=0;j<=b.length;j++)prev[j]=cur[j]}
+  return prev[b.length];
+}
+function tokenSimilar(a,b){
+  a=canonicalToken(a);b=canonicalToken(b);if(a===b)return 1;
+  if(/\d/.test(a)||/\d/.test(b)) return a===b?1:0; // especificações numéricas precisam ser exatas.
+  if(a.length>=4&&b.length>=4&&(a.startsWith(b)||b.startsWith(a)))return .9;
+  const d=lev(a,b),mx=Math.max(a.length,b.length);if(mx>=5&&d===1)return .88;if(mx>=7&&d===2)return .76;
+  return 0;
+}
+function similarity(phrase,candidate){
+  const p=tokens(phrase),c=tokens(candidate);if(!c.length)return 0;
+  let hit=0,weighted=0,matched=0;
+  for(const ct of c){
+    if(STOP_TOKENS.has(ct))continue;
+    const w=/\d/.test(ct)?2.2:(ct.length>=7?1.35:1);weighted+=w;
+    let best=0;for(const pt of p)best=Math.max(best,tokenSimilar(pt,ct));
+    hit+=w*best;if(best>=.75)matched++;
+  }
+  if(!weighted)return 0;
+  let coverage=hit/weighted;
+  const pn=normText(phrase),cn=normText(candidate);
+  if(pn.includes(cn))coverage+=.28;
+  // Bônus quando várias palavras distintivas aparecem juntas, mesmo com pequena variação do reconhecimento.
+  if(matched>=3)coverage+=.08; else if(matched>=2)coverage+=.035;
+  return Math.min(1,coverage);
+}
+// Famílias fortes de material. Quando o operador fala uma destas palavras, primeiro
+// restringimos a busca à mesma família e só depois comparamos sabores/especificações.
+// Isso evita, por exemplo, "caixinha ... pêssego" ser confundida com um BLEND de pêssego.
+const FAMILY_RULES=[
+  {id:'CAIXINHA', words:['CAIXINHA','CAIXINH','CAIXIN','CAIXI','CAIXA','CAIX']},
+  {id:'BLEND', words:['BLEND']},
+  {id:'ENVELOPE', words:['ENVELOPE','ENV']},
+  {id:'ETIQUETA', words:['ETIQUETA','ETIQ']},
+  {id:'FILME', words:['FILME']},
+  {id:'AROMA', words:['AROMA']},
+  {id:'PAPEL_FILTRO', words:['PAPEL FILTRO','PAPEL','FILTRO']},
+  {id:'ADESIVO_COLA', words:['ADESIVO','COLA','PVA']},
+  {id:'TAG', words:['TAG']},
+  {id:'FIO', words:['FIO']},
+  {id:'FITA', words:['FITA']},
+  {id:'ERVA', words:['ERVA MATE','ERVA']}
+];
+function detectFamily(text){
+  const n=normText(text);
+  for(const r of FAMILY_RULES){
+    for(const w of r.words){
+      const wn=normText(w);
+      if(wn.includes(' ')){
+        if(n.includes(wn))return r.id;
+      }else if(new RegExp('(?:^|\\s)'+wn+'(?:\\s|$)').test(n)) return r.id;
+    }
+  }
+  return '';
+}
+function findMatches(phrase){
+  const phraseNorm=normText(phrase);let out=[];
+  const spokenFamily=detectFamily(phrase);
+  for(const m of MATERIALS){
+    const c=getCfg(m.material);
+    const materialFamily=detectFamily(voiceName(m));
+
+    // Palavra-chave de família tem prioridade. Se a fala diz CAIXINHA, materiais BLEND,
+    // FILME, ETIQUETA etc. ficam fora da disputa, ainda que sabores coincidam.
+    if(spokenFamily && materialFamily && spokenFamily!==materialFamily) continue;
+
+    let best=similarity(phrase,voiceName(m));
+    const aliases=String(c.aliases||'').split(';').map(x=>x.trim()).filter(Boolean);
+    for(const a of aliases){
+      const aliasFamily=detectFamily(a);
+      if(spokenFamily && aliasFamily && spokenFamily!==aliasFamily) continue;
+      let sc=similarity(phrase,a);
+      if(phraseNorm.includes(normText(a)))sc+=.22;
+      best=Math.max(best,sc);
+    }
+    // Bônus forte para correspondência da família explicitamente falada.
+    if(spokenFamily && materialFamily===spokenFamily) best+=.24;
+
+    // Código do material dito explicitamente deve ter prioridade máxima.
+    if(new RegExp('(?:^|\\s)'+String(m.material).replace(/\D/g,'')+'(?:\\s|$)').test(phraseNorm.replace(/\D+/g,' ')))best=1;
+    out.push({m,score:Math.min(1,best),family:materialFamily});
+  }
+  return out.sort((a,b)=>b.score-a.score).slice(0,5);
+}
+function numsFromPhrase(s){
+  const x=spokenNorm(s).replace(/(\d)\.(\d{3})(?=\D|$)/g,'$1$2');
+  return [...x.matchAll(/\d+(?:[.,]\d+)?/g)].map(m=>({v:Number(m[0].replace(',','.')),i:m.index,raw:m[0]}));
+}
+function parseCalc(phrase,m){
+  const s=spokenNorm(phrase); const c=getCfg(m.material); const ns=numsFromPhrase(s);
+
+  // Números explicitamente acompanhados de unidade falada têm prioridade como QUANTIDADE.
+  // Ex.: material cadastrado contém "10UN", mas a fala termina em "10 unidades".
+  // Nesse caso o 10 deve continuar disponível para a contagem, não ser removido como especificação.
+  const protectedIdx=new Set();
+  for(let k=0;k<ns.length;k++){
+    const n=ns[k];
+    const tail=s.slice(n.i+n.raw.length, n.i+n.raw.length+18);
+    const head=s.slice(Math.max(0,n.i-18), n.i);
+    if(/^\s*(?:un|kg)\b/.test(tail) || /(?:x|por)\s*$/.test(head) || /^\s*(?:x|por)\b/.test(tail)) protectedIdx.add(k);
+  }
+
+  // Remove números que pertencem ao nome/especificação do material (100G, 30X10 etc.),
+  // mas NUNCA remove um número que foi explicitamente falado como quantidade/fator.
+  const specNums=(voiceName(m).match(/\d+(?:[.,]\d+)?/g)||[]).map(x=>Number(x.replace(',','.')));
+  let work=ns.map((n,idx)=>({...n,_idx:idx}));
+  for(const spec of specNums){
+    const idx=work.findIndex(n=>!protectedIdx.has(n._idx) && Math.abs(n.v-spec)<1e-9);
+    if(idx>=0) work.splice(idx,1);
+  }
+
+  let base=null,factor=null,usedDefault=false;
+  const mult=/\b(?:x|por)\b|\bde\b/.test(s) || /em cada/.test(s);
+  if(mult && work.length>=2){base=work[work.length-2].v;factor=work[work.length-1].v}
+  else if(work.length>=1){base=work[work.length-1].v; if(c.factor!==''&&c.factor!=null){factor=Number(String(c.factor).replace(',','.'));usedDefault=true}}
+  if(base===null || !Number.isFinite(base)) return {error:'Não encontrei uma quantidade válida na frase.'};
+  const um=(c.um||m.um_sugerida||'KG').toUpperCase();
+  let result=factor!==null?base*factor:base;
+  if(um==='UN') result=Math.round(result); else result=Math.round(result*1000)/1000;
+  return {base,factor,usedDefault,um,result};
+}
+function totalFor(mat){return entries.filter(e=>e.material===mat).reduce((a,e)=>a+Number(e.result||0),0)}
+function fmt(n,um){if(!Number.isFinite(Number(n)))return '—';return Number(n).toLocaleString('pt-BR',{minimumFractionDigits:um==='UN'?0:0,maximumFractionDigits:um==='UN'?0:3})}
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.remove('hidden');clearTimeout(window._tt);window._tt=setTimeout(()=>el.classList.add('hidden'),3000)}
+
+function hasVoiceConfirm(s){return /(?:^|\s)(?:confirmar|confirma)[.!?\s]*$/i.test(String(s||'').trim())}
+function stripVoiceConfirm(s){return String(s||'').trim().replace(/(?:^|\s)(?:confirmar|confirma)[.!?\s]*$/i,'').trim()}
+function interpret(options={}){
+  const raw=document.getElementById('phrase').value.trim(); const box=document.getElementById('preview');
+  const autoConfirm=false;
+  const phrase=raw;
+  if(!phrase){toast('Digite ou fale uma contagem.');return}
+  const matches=findMatches(phrase); const best=matches[0];
+  if(!best || best.score<0.34){box.className='preview error';box.innerHTML='<b>Material não identificado.</b><div class="hint">Tente usar mais palavras do texto breve ou cadastre um apelido na aba Cadastro de voz.</div>';pending=null;if(autoConfirm){setFeedback('error','Material não identificado','Não consegui identificar o material.');beep(260,140);speak('Não consegui identificar o material. Fale novamente começando por Contagem.')}return}
+  if(best.score<0.62 && matches[1] && best.score-matches[1].score<0.15){
+    box.className='preview warn'; box.innerHTML='<b>Encontrei mais de uma possibilidade. Escolha o material:</b><div class="actions">'+matches.slice(0,4).map((x,i)=>`<button class="btn" onclick="chooseMatch(${i})">${x.m.descricao} (${Math.round(x.score*100)}%)</button>`).join('')+'</div><div class="hint">Escolha o material correto antes de salvar.</div>'; window._matches=matches;pending={phrase,autoConfirm:false};if(autoConfirm){setFeedback('error','Preciso confirmar o material','Encontrei mais de uma opção. Escolha na tela.');beep(360,140);speak('Encontrei mais de um material possível. Escolha o material na tela.')}return;
+  }
+  buildPreview(phrase,best.m,best.score,autoConfirm);
+}
+function chooseMatch(i){const x=window._matches[i];buildPreview(pending.phrase,x.m,x.score,false)}
+function buildPreview(phrase,m,score,autoConfirm=false){
+  const calc=parseCalc(phrase,m);const box=document.getElementById('preview');
+  if(calc.error){box.className='preview error';box.innerHTML='<b>'+calc.error+'</b>';pending=null;if(autoConfirm){setFeedback('error','Não consegui calcular',calc.error);beep(300,140);speak('Não consegui entender a quantidade ou o cálculo. Fale novamente.')}return}
+  const before=totalFor(m.material),after=before+calc.result;
+  pending={phrase,m,score,calc,before,after};
+  box.className='preview';
+  box.innerHTML=`<div class="kv"><b>Material</b><span>${m.material} — ${m.descricao}</span><b>Reconhecimento</b><span>${Math.round(score*100)}%</span><b>Fala</b><span>“${phrase.replace(/</g,'&lt;')}”</span><b>Quantidade base</b><span>${fmt(calc.base,calc.um)}</span><b>Fator</b><span>${calc.factor===null?'—':fmt(calc.factor,'KG')}${calc.usedDefault?' <span class="pill">padrão</span>':''}</span><b>Cálculo</b><span>${calc.factor===null?fmt(calc.base,calc.um):`${fmt(calc.base,'KG')} × ${fmt(calc.factor,'KG')}`}</span><b>Resultado</b><span class="bigResult">${fmt(calc.result,calc.um)} ${calc.um}</span><b>Acumulado após salvar</b><span><b>${fmt(after,calc.um)} ${calc.um}</b></span></div><div class="actions"><button class="btn primary" onclick="confirmPending()">Salvar contagem</button><button class="btn" onclick="cancelPending()">Cancelar</button></div>`;
+  if(autoConfirm){
+    const state=document.getElementById('voiceState'); if(state) state.innerHTML='✅ Palavra <b>“confirmar”</b> reconhecida. Salvando contagem…';
+    setTimeout(()=>confirmPending(true),180);
+  }
+}
+function confirmPending(){if(!pending?.m)return;const {phrase,m,calc}=pending;const now=Date.now();const last=entries[entries.length-1];if(last&&last.material===m.material&&last.phrase===phrase&&now-last.ts<2500){toast('Salvamento duplicado bloqueado.');return}entries.push({id:crypto.randomUUID?crypto.randomUUID():String(now)+Math.random(),ts:now,material:m.material,descricao:m.descricao,phrase,base:calc.base,factor:calc.factor,defaultFactor:calc.usedDefault,um:calc.um,result:calc.result});localStorage.setItem(STORE,JSON.stringify(entries));pending=null;document.getElementById('preview').classList.add('hidden');document.getElementById('phrase').value='';renderAll();voiceState('✅ <b>Contagem salva.</b> Pronto para iniciar uma nova leitura.');setFeedback('saved','SALVO',`Resultado salvo: ${fmt(calc.result,calc.um)} ${calc.um}`);toast('Contagem adicionada ao acumulado.');setTimeout(()=>{setFeedback('idle','PRONTO PARA INICIAR','Toque em “Iniciar voz”.');resetUnderstanding()},1200)}
+function cancelPending(){pending=null;document.getElementById('preview').classList.add('hidden');document.getElementById('phrase').value='';voiceState('Pronto para iniciar uma nova leitura.');setFeedback('idle','PRONTO PARA INICIAR','Toque em “Iniciar voz”.');resetUnderstanding()}
+function undoEntry(id){entries=entries.filter(e=>e.id!==id);localStorage.setItem(STORE,JSON.stringify(entries));renderAll();toast('Lançamento desfeito e total recalculado.');}
+function renderTotals(){const q=normText(document.getElementById('search').value);const body=document.getElementById('totalsBody');const rows=MATERIALS.filter(m=>!q||normText(m.material+' '+m.descricao+' '+voiceName(m)).includes(q)).map(m=>{const c=getCfg(m.material),t=totalFor(m.material);return `<tr><td>${m.material}</td><td><div class="materialName">${m.descricao}</div></td><td>${voiceName(m)}</td><td>${c.um||m.um_sugerida}</td><td class="num">${fmt(m.estoque,c.um||m.um_sugerida)}</td><td class="num"><b>${t?fmt(t,c.um||m.um_sugerida):'—'}</b></td></tr>`}).join('');body.innerHTML=rows;document.getElementById('matCount').textContent=MATERIALS.length;document.getElementById('entryCount').textContent=entries.length;document.getElementById('countedCount').textContent=new Set(entries.map(e=>e.material)).size;}
+function renderHistory(){const el=document.getElementById('historyList');if(!entries.length){el.innerHTML='<div class="hint">Nenhuma contagem confirmada ainda.</div>';return}el.innerHTML=[...entries].reverse().map(e=>`<div class="historyItem"><div class="row"><div><b>${e.material} — ${e.descricao}</b><div class="sub">${new Date(e.ts).toLocaleString('pt-BR')} • “${e.phrase.replace(/</g,'&lt;')}”</div></div><div><span class="pill">${fmt(e.result,e.um)} ${e.um}</span></div></div><div class="sub" style="margin-top:6px">${e.factor===null?`Entrada simples: ${fmt(e.base,e.um)}`:`${fmt(e.base,'KG')} × ${fmt(e.factor,'KG')} = ${fmt(e.result,e.um)} ${e.um}${e.defaultFactor?' • fator padrão':''}`} • acumulado atual: <b>${fmt(totalFor(e.material),e.um)} ${e.um}</b></div><div class="actions"><button class="btn danger" onclick="undoEntry('${e.id}')">Desfazer esta entrada</button></div></div>`).join('')}
+function renderConfig(){
+  const el=document.getElementById('configList');
+  const q=normText(document.getElementById('configSearch')?.value||'');
+  const um=(document.getElementById('configUm')?.value||'').toUpperCase();
+  const filtered=MATERIALS.filter(m=>{
+    const c=getCfg(m.material);const hay=normText(m.material+' '+m.descricao+' '+voiceName(m)+' '+String(c.aliases||''));
+    return (!q||hay.includes(q)||tokens(q).every(qt=>tokens(hay).some(ht=>tokenSimilar(qt,ht)>=.76))) && (!um||(c.um||m.um_sugerida).toUpperCase()===um);
+  });
+  const info=document.getElementById('configFilterInfo');if(info)info.textContent=`Exibindo ${filtered.length} de ${MATERIALS.length} materiais.`;
+  el.innerHTML=filtered.map(m=>{const c=getCfg(m.material);return `<div class="config"><div><b>${m.material}</b> — ${m.descricao}</div><div class="sub">Nome base: ${voiceName(m)}</div><div class="inputs"><input value="${String(c.aliases||'').replace(/"/g,'&quot;')}" placeholder="apelidos; separados; por ;" onchange="updateCfg('${m.material}','aliases',this.value)"><input value="${c.factor??''}" placeholder="fator" inputmode="decimal" onchange="updateCfg('${m.material}','factor',this.value)"><select onchange="updateCfg('${m.material}','um',this.value)"><option ${c.um==='KG'?'selected':''}>KG</option><option ${c.um==='UN'?'selected':''}>UN</option></select></div></div>`}).join('') || '<div class="hint">Nenhum material encontrado para este filtro.</div>';
+}
+function updateCfg(mat,key,val){cfg[mat]={...getCfg(mat),[key]:val};saveCfg();renderTotals();toast('Cadastro atualizado.');}
+function renderAll(){renderTotals();renderHistory();renderConfig()}
+function exportCsv(){const header=['Material','Descricao MB52','UM','Contagem acumulada'];const lines=[header];for(const m of MATERIALS){const c=getCfg(m.material),t=totalFor(m.material);if(t!==0)lines.push([m.material,m.descricao,c.um||m.um_sugerida,t])}const csv='\ufeff'+lines.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='contagem_voz_final.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+
+document.getElementById('interpretBtn').onclick=interpret;document.getElementById('phrase').addEventListener('keydown',e=>{if(e.key==='Enter')interpret()});document.getElementById('search').oninput=renderTotals;document.getElementById('configSearch').oninput=renderConfig;document.getElementById('configUm').onchange=renderConfig;document.getElementById('configClear').onclick=()=>{document.getElementById('configSearch').value='';document.getElementById('configUm').value='';renderConfig()};document.getElementById('exportBtn').onclick=exportCsv;document.getElementById('resetBtn').onclick=()=>{if(confirm('Limpar todos os lançamentos de teste?')){entries=[];localStorage.setItem(STORE,'[]');renderAll();toast('Teste limpo.')}};
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));['totals','history','config'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab))});
+
+
+// Feedback de voz e painel de entendimento em tempo real.
+let voiceSpeaking=false;
+function setFeedback(mode,label,transcript=''){
+  const box=document.getElementById('voiceFeedback');
+  if(box){box.className='voiceFeedback '+mode;}
+  const l=document.getElementById('voiceModeLabel'); if(l)l.textContent=label;
+  const t=document.getElementById('liveTranscript'); if(t&&transcript!==undefined)t.textContent=transcript||'';
+}
+function vibrate(pattern){try{if(navigator.vibrate)navigator.vibrate(pattern)}catch(e){}}
+function beep(freq=880,duration=90){
+  try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;const ctx=new AC();const o=ctx.createOscillator();const g=ctx.createGain();o.frequency.value=freq;g.gain.value=.045;o.connect(g);g.connect(ctx.destination);o.start();setTimeout(()=>{o.stop();ctx.close()},duration)}catch(e){}
+}
+function speak(text,after){if(after)after()}
+function resetUnderstanding(){
+  for(const [id,txt] of [['uMaterial','Aguardando'],['uQty','Aguardando']]){const el=document.getElementById(id);if(el){el.textContent=txt;el.className='waitText'}}
+  const f=document.getElementById('uFactor');if(f)f.textContent='—';const r=document.getElementById('uResult');if(r)r.textContent='—';
+}
+function updateUnderstanding(text){
+  const raw=String(text||'').trim(); if(!raw){resetUnderstanding();return;}
+  try{
+    const matches=findMatches(raw);
+    const best=matches&&matches[0];
+    const mEl=document.getElementById('uMaterial');
+    if(mEl){
+      if(best&&best.score>=0.38){mEl.textContent=best.m.descricao;mEl.className=best.score>=0.58?'okText':'waitText'}
+      else{mEl.textContent='Ainda não identificado';mEl.className='waitText'}
+    }
+    let calc=null;
+    if(best&&best.m){try{calc=parseCalc(raw,best.m)}catch(e){calc=null}}
+    const q=document.getElementById('uQty'),f=document.getElementById('uFactor'),r=document.getElementById('uResult');
+    if(calc && !calc.error){
+      if(q){q.textContent=fmt(calc.base,calc.um)+' '+(calc.factor!==null?'volumes':(calc.um==='UN'?'unidades':'kg'));q.className='okText'}
+      if(f)f.textContent=calc.factor===null?'—':fmt(calc.factor,'KG')+(calc.usedDefault?' (padrão)':'');
+      if(r)r.textContent=fmt(calc.result,calc.um)+' '+calc.um;
+    }else{
+      if(q){q.textContent='Aguardando';q.className='waitText'} if(f)f.textContent='—'; if(r)r.textContent='—';
+    }
+  }catch(e){}
+}
+function resultSpeech(){
+  const last=entries[entries.length-1]; if(!last)return 'Contagem salva.';
+  const qtd=Number(last.result).toLocaleString('pt-BR',{maximumFractionDigits:last.um==='UN'?0:3});
+  return `Confirmado. ${last.descricao}. ${qtd} ${last.um==='UN'?'unidades':'quilos'} salvos.`;
+}
+
+// Fluxo móvel robusto: uma sessão por toque, sem reinício automático.
+let rec=null, listening=false, starting=false, voiceFinal='', voiceInterim='', endingByButton=false, startedAt=0;
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const mic=document.getElementById('micBtn');
+const stopMic=document.getElementById('stopMicBtn');
+const isMobile=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+function voiceState(html){const el=document.getElementById('voiceState');if(el)el.innerHTML=html}
+function escHtml(v){return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function setVoiceButtons(mode){
+  if(mode==='starting'){
+    mic.classList.remove('hidden');stopMic.classList.add('hidden');mic.disabled=true;mic.textContent='⏳ Ativando microfone…';
+  }else if(mode==='listening'){
+    mic.classList.add('hidden');stopMic.classList.remove('hidden');mic.disabled=false;mic.textContent='🎙 Iniciar voz';
+  }else{
+    mic.classList.remove('hidden');stopMic.classList.add('hidden');mic.disabled=false;mic.textContent='🎙 Iniciar voz';
+  }
+}
+function updateVoiceText(){
+  const all=(voiceFinal+' '+voiceInterim).replace(/\s+/g,' ').trim();
+  document.getElementById('phrase').value=all;
+  const dbg=document.getElementById('voiceDebug'); if(dbg)dbg.innerHTML='<b>Último reconhecimento:</b> '+(all?escHtml(all):'—');
+  setFeedback('hearing','OUVINDO',all||'Fale o material e a quantidade.');
+  updateUnderstanding(all);
+}
+function enterPreview(){
+  starting=false;listening=false;setVoiceButtons('idle');
+  const text=(voiceFinal+' '+voiceInterim).replace(/\s+/g,' ').trim() || document.getElementById('phrase').value.trim();
+  document.getElementById('phrase').value=text;
+  if(!text){
+    voiceState('⚠️ <b>Nenhuma fala foi reconhecida.</b> Toque em “Iniciar voz” e fale logo após aparecer OUVINDO.');
+    setFeedback('error','NÃO OUVI A CONTAGEM','Nenhuma fala foi reconhecida. Tente novamente.');
+    return;
+  }
+  voiceState('🟡 <b>PRÉVIA.</b> Revise o que foi entendido e salve ou cancele.');
+  setFeedback('confirming','PRÉVIA',text);
+  interpret();
+}
+function buildRecognition(){
+  const r=new SR();
+  r.lang='pt-BR';
+  // Chrome Android costuma encerrar continuous=true imediatamente ou após pausas.
+  // Em celular/tablet usamos uma sessão de uma fala; no desktop mantemos continuous.
+  r.continuous=!isMobile;
+  r.interimResults=true;
+  r.maxAlternatives=3;
+  r.onstart=()=>{
+    starting=false;listening=true;startedAt=Date.now();setVoiceButtons('listening');
+    voiceState('🔴 <b>OUVINDO.</b> Fale agora o material e a quantidade.');
+    setFeedback('hearing','OUVINDO','Fale normalmente. Ao terminar, toque em “Encerrar voz”.');
+  };
+  r.onaudiostart=()=>{voiceState('🔴 <b>MICROFONE ATIVO.</b> Pode falar.');};
+  r.onspeechstart=()=>{setFeedback('hearing','ENTENDENDO','Estou ouvindo sua fala…');};
+  r.onresult=e=>{
+    let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const res=e.results[i];
+      let t=(res[0]?.transcript||'').trim();
+      // usa a alternativa mais longa quando a primeira vier curta/incompleta
+      for(let a=1;a<res.length;a++) if((res[a]?.transcript||'').trim().length>t.length) t=res[a].transcript.trim();
+      if(res.isFinal) voiceFinal=(voiceFinal+' '+t).trim(); else interim+=(interim?' ':'')+t;
+    }
+    voiceInterim=interim;updateVoiceText();
+  };
+  r.onerror=e=>{
+    if(e.error==='aborted'&&endingByButton)return;
+    starting=false;listening=false;setVoiceButtons('idle');
+    const map={
+      'not-allowed':'Permissão de microfone negada. Libere o microfone para este site nas configurações do navegador.',
+      'service-not-allowed':'O serviço de reconhecimento de voz foi bloqueado pelo navegador.',
+      'audio-capture':'Não foi possível acessar o microfone do aparelho.',
+      'network':'O reconhecimento de voz do navegador não conseguiu acessar o serviço de voz. Verifique a internet.',
+      'no-speech':'Nenhuma fala foi detectada. Toque novamente e fale logo após aparecer OUVINDO.'
+    };
+    const msg=map[e.error]||('Erro de reconhecimento: '+e.error+'.');
+    voiceState('⚠️ '+escHtml(msg));setFeedback('error','ERRO DE VOZ',msg);
+  };
+  r.onend=()=>{
+    const elapsed=startedAt?Date.now()-startedAt:0;
+    const hasText=!!(voiceFinal||voiceInterim||document.getElementById('phrase').value.trim());
+    const wasActive=listening||starting||endingByButton;
+    starting=false;listening=false;setVoiceButtons('idle');
+    if(endingByButton){endingByButton=false;enterPreview();return;}
+    if(wasActive&&hasText){enterPreview();return;}
+    // Se o Chrome móvel encerrar logo depois de iniciar sem ouvir nada, não simula clique/desclique silencioso.
+    if(wasActive && elapsed<1800){
+      voiceState('⚠️ <b>O reconhecimento encerrou antes de captar a fala.</b> Confirme que abriu pelo link HTTPS do GitHub Pages e que o microfone está permitido para este site.');
+      setFeedback('error','MICROFONE NÃO PERMANECEU ATIVO','Abra pelo endereço https://...github.io e permita o microfone para o site.');
+    }
+  };
+  return r;
+}
+async function startVoice(){
+  if(!SR){voiceState('⚠️ Este navegador não oferece reconhecimento de voz. Use Chrome/Edge atualizado.');setFeedback('error','VOZ NÃO SUPORTADA','Use Chrome ou Edge atualizado, ou digite a contagem.');return}
+  if(starting||listening)return;
+  if(!window.isSecureContext){
+    voiceState('⚠️ <b>O microfone exige uma página HTTPS.</b> No celular, abra o app pelo link do GitHub Pages, não pelo arquivo HTML baixado.');
+    setFeedback('error','HTTPS NECESSÁRIO','Abra pelo link https://...github.io.');return;
+  }
+  pending=null;document.getElementById('preview').classList.add('hidden');
+  voiceFinal='';voiceInterim='';endingByButton=false;startedAt=0;document.getElementById('phrase').value='';resetUnderstanding();
+  starting=true;setVoiceButtons('starting');voiceState('⏳ Solicitando o microfone…');setFeedback('idle','ATIVANDO MICROFONE','Aguarde aparecer OUVINDO antes de falar.');
+  try{
+    // Um objeto novo por sessão é mais estável no Chrome Android e não cria loop.
+    rec=buildRecognition();
+    rec.start();
+    // Se onstart não ocorrer, não deixa o botão preso indefinidamente.
+    setTimeout(()=>{if(starting){starting=false;setVoiceButtons('idle');voiceState('⚠️ O navegador não iniciou o reconhecimento. Verifique a permissão do microfone e tente novamente.');setFeedback('error','NÃO INICIOU','Verifique a permissão do microfone para este site.')}},5000);
+  }catch(e){
+    starting=false;setVoiceButtons('idle');voiceState('⚠️ Não foi possível iniciar o microfone. Aguarde um instante e tente novamente.');setFeedback('error','ERRO AO INICIAR','Tente novamente.');
+  }
+}
+function stopVoice(){
+  if(starting){voiceState('⏳ O microfone ainda está iniciando. Aguarde aparecer OUVINDO.');return}
+  if(!listening){if(voiceFinal||voiceInterim)enterPreview();return}
+  endingByButton=true;voiceState('⏳ Encerrando voz e preparando a prévia…');
+  try{rec.stop()}catch(e){endingByButton=false;enterPreview()}
+}
+if(SR){mic.onclick=startVoice;stopMic.onclick=stopVoice}else{mic.disabled=true;mic.textContent='Voz não suportada';mic.style.opacity=.55;stopMic.classList.add('hidden');voiceState('⚠️ Este navegador não oferece reconhecimento de voz. Use Chrome/Edge atualizado.');setFeedback('error','Voz não suportada','Use Chrome ou Edge atualizado, ou digite a contagem.')}
+// Em arquivo local, o navegador pode pedir permissão a cada nova sessão. Esta versão não reinicia a escuta sozinha, evitando loop de autorização.
+if(location.protocol==='file:'){const st=document.getElementById('voiceState');st.insertAdjacentHTML('afterend','<div class="hint" style="margin-top:8px;padding:9px;border-radius:8px;background:#fff7ed;border:1px solid #fdba74"><b>Microfone no celular:</b> o arquivo HTML aberto diretamente pode não ter permissão de voz. Para testar o microfone, use a versão publicada em HTTPS pelo GitHub Pages.</div>');}
+renderAll();
+</script>
+</body></html>
