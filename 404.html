@@ -149,7 +149,7 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
           <div id="mobileTotals" class="mobileTotals"></div><div class="tableWrap desktopTotals"><table><thead><tr><th>Material</th><th>Descrição MB52</th><th>Nome p/ voz</th><th>UM</th><th class="num">Estoque MB52</th><th class="num">Contagem acumulada</th></tr></thead><tbody id="totalsBody"></tbody></table></div>
         </section>
         <section id="tab-history" class="hidden"><div id="historyList"></div></section>
-        <section id="tab-config" class="hidden"><div class="hint" style="margin-bottom:8px">Apelidos separados por ponto e vírgula. O fator padrão é opcional e nunca trava o valor falado.</div><div class="searchRow"><input id="configSearch" class="phrase" placeholder="Filtrar por código, descrição, nome de voz ou apelido..."/><select id="configUm" class="btn"><option value="">Todas as UM</option><option value="KG">KG</option><option value="UN">UN</option></select><button id="configClear" class="btn">Limpar filtro</button></div><div id="configFilterInfo" class="hint" style="margin-bottom:8px"></div><div id="configList" class="configList"></div></section>
+        <section id="tab-config" class="hidden"><div class="hint" style="margin-bottom:8px">Apelidos separados por ponto e vírgula. O fator padrão é opcional e nunca trava o valor falado. Enquanto você estiver digitando, a sincronização automática fica pausada para não apagar o texto.</div><div class="searchRow"><input id="configSearch" class="phrase" placeholder="Filtrar por código, descrição, nome de voz ou apelido..."/><select id="configUm" class="btn"><option value="">Todas as UM</option><option value="KG">KG</option><option value="UN">UN</option></select><button id="configClear" class="btn">Limpar filtro</button></div><div id="configFilterInfo" class="hint" style="margin-bottom:8px"></div><div id="configList" class="configList"></div></section>
         <section id="tab-days" class="hidden"><div class="hint" style="margin-bottom:8px">Dias iniciados e finalizados. Você pode baixar novamente o XLSX de qualquer dia.</div><div id="daysList" class="daysList"></div></section>
       </div>
     </div>
@@ -181,6 +181,28 @@ let selectedDayId=activeDayId||'';
 let cloud=null;
 let cloudEnabled=false;
 let cloudSyncing=false;
+let cloudSyncDeferred=false;
+let lastCloudSyncAt=0;
+function userIsEditing(){
+  const a=document.activeElement;
+  if(!a)return false;
+  return a.matches?.('input, textarea, select') || a.isContentEditable;
+}
+function scheduleDeferredCloudSync(){
+  if(!cloudEnabled||!cloudSyncDeferred)return;
+  clearTimeout(window._cloudDeferredTimer);
+  window._cloudDeferredTimer=setTimeout(()=>{
+    if(!userIsEditing()){cloudSyncDeferred=false;pullCloud(true)}
+  },900);
+}
+document.addEventListener('focusin',e=>{
+  if(e.target?.matches?.('input, textarea, select')){
+    setCloudStatus(cloudEnabled?'online':'local',cloudEnabled?'Sincronização pausada durante a edição.':'');
+  }
+});
+document.addEventListener('focusout',e=>{
+  if(e.target?.matches?.('input, textarea, select')) scheduleDeferredCloudSync();
+});
 const CLOUD_CONF=window.CONTAGEM_SUPABASE||{};
 const CLOUD_WORKSPACE=CLOUD_CONF.workspace||'leao-contagem-voz';
 function setCloudStatus(mode,detail){
@@ -210,8 +232,9 @@ function localDateISO(){const d=new Date();return `${d.getFullYear()}-${String(d
 function fmtDayDate(v){if(!v)return '—';const [y,m,d]=String(v).split('-');return `${d}/${m}/${y}`}
 async function startDay(){if(activeDay()){toast('Já existe um dia em andamento. Finalize-o antes de iniciar outro.');return}const now=new Date();const d={id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random()),day_date:localDateISO(),status:'open',started_at:now.toISOString(),finalized_at:null};days.push(d);activeDayId=d.id;selectedDayId=d.id;saveDaysLocal();renderAll();await pushDayCloud(d);toast('Dia iniciado. As contagens já estão liberadas.')}
 async function finishDay(){const d=activeDay();if(!d){toast('Não há dia aberto para finalizar.');return}if(!confirm(`Finalizar o dia ${fmtDayDate(d.day_date)}? Após finalizar, novas contagens exigirão um novo dia.`))return;d.status='closed';d.finalized_at=new Date().toISOString();await pushDayCloud(d);activeDayId='';selectedDayId=d.id;saveDaysLocal();renderAll();toast('Dia finalizado. O XLSX continua disponível para download.')}
-async function pullCloud(){
+async function pullCloud(force=false){
   if(!cloudEnabled||cloudSyncing)return;
+  if(!force && userIsEditing()){cloudSyncDeferred=true;setCloudStatus('online','Sincronização pausada enquanto você digita.');return;}
   cloudSyncing=true;setCloudStatus('sync','Buscando dados compartilhados…');
   try{
     const [{data:remoteEntries,error:ee},{data:remoteCfg,error:ce},{data:remoteDays,error:de}]=await Promise.all([
@@ -231,14 +254,15 @@ async function pullCloud(){
     const cfgRows=Object.keys(cfg).map(mat=>({workspace:CLOUD_WORKSPACE,material:mat,aliases:String(cfg[mat]?.aliases||''),factor:String(cfg[mat]?.factor||''),um:String(cfg[mat]?.um||'KG'),updated_at:new Date().toISOString()}));
     if(cfgRows.length) await cloud.from('voice_material_config').upsert(cfgRows);
     if(days.length) await cloud.from('voice_days').upsert(days.map(dayRow));
-    renderAll();setCloudStatus('online',`Compartilhado • ${entries.length} lançamentos`);
+    lastCloudSyncAt=Date.now();
+    renderAll({preserveEditing:true});setCloudStatus('online',`Compartilhado • ${entries.length} lançamentos`);
   }catch(err){console.warn('Supabase pull:',err);setCloudStatus('offline','Usando cache local. Verifique internet/configuração.');}
   finally{cloudSyncing=false}
 }
 async function initCloud(){
   if(!cloudConfigured()){setCloudStatus('local','Configure supabase-config.js para compartilhar entre aparelhos.');return}
   if(!window.supabase?.createClient){setCloudStatus('offline','Biblioteca Supabase não carregou.');return}
-  try{cloud=window.supabase.createClient(CLOUD_CONF.url,CLOUD_CONF.anonKey,{auth:{persistSession:false,autoRefreshToken:false}});cloudEnabled=true;await pullCloud();setInterval(()=>{if(document.visibilityState==='visible')pullCloud()},15000);window.addEventListener('online',pullCloud);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pullCloud()});}
+  try{cloud=window.supabase.createClient(CLOUD_CONF.url,CLOUD_CONF.anonKey,{auth:{persistSession:false,autoRefreshToken:false}});cloudEnabled=true;await pullCloud(true);setInterval(()=>{if(document.visibilityState==='visible')pullCloud()},60000);window.addEventListener('online',()=>pullCloud());document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pullCloud()});}
   catch(err){console.warn(err);setCloudStatus('offline','Não foi possível conectar ao Supabase.');}
 }
 
@@ -485,11 +509,25 @@ function renderConfig(){
   const info=document.getElementById('configFilterInfo');if(info)info.textContent=`Exibindo ${filtered.length} de ${MATERIALS.length} materiais.`;
   el.innerHTML=filtered.map(m=>{const c=getCfg(m.material);return `<div class="config"><div><b>${m.material}</b> — ${m.descricao}</div><div class="sub">Nome base: ${voiceName(m)}</div><div class="inputs"><input value="${String(c.aliases||'').replace(/"/g,'&quot;')}" placeholder="apelidos; separados; por ;" onchange="updateCfg('${m.material}','aliases',this.value)"><input value="${c.factor??''}" placeholder="fator" inputmode="decimal" onchange="updateCfg('${m.material}','factor',this.value)"><select onchange="updateCfg('${m.material}','um',this.value)"><option ${c.um==='KG'?'selected':''}>KG</option><option ${c.um==='UN'?'selected':''}>UN</option></select></div></div>`}).join('') || '<div class="hint">Nenhum material encontrado para este filtro.</div>';
 }
-async function updateCfg(mat,key,val){cfg[mat]={...getCfg(mat),[key]:val};saveCfg();renderTotals();toast(cloudEnabled?'Cadastro atualizado. Sincronizando…':'Cadastro atualizado localmente.');await pushCfgCloud(mat);if(cloudEnabled)setCloudStatus('online',`Cadastro compartilhado • ${entries.length} lançamentos`);}
+async function updateCfg(mat,key,val){
+  cfg[mat]={...getCfg(mat),[key]:val};
+  saveCfg();renderTotals();
+  toast(cloudEnabled?'Cadastro salvo. Enviando para a nuvem…':'Cadastro atualizado localmente.');
+  const ok=await pushCfgCloud(mat);
+  if(cloudEnabled&&ok)setCloudStatus('online','Cadastro salvo na nuvem. Continue digitando normalmente.');
+  scheduleDeferredCloudSync();
+}
 function renderDayUI(){const d=activeDay();const v=viewDay();const panel=document.getElementById('dayPanel');const title=document.getElementById('dayTitle');const meta=document.getElementById('dayMeta');const st=document.getElementById('dayStatus');const start=document.getElementById('startDayBtn');const finish=document.getElementById('finishDayBtn');const dl=document.getElementById('downloadDayBtn');if(d){panel.classList.remove('closed');title.textContent=`Dia em andamento — ${fmtDayDate(d.day_date)}`;meta.textContent=`Iniciado às ${new Date(d.started_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} • ${dayEntries(d.id).length} lançamentos`;st.textContent='ABERTO';st.className='dayStatus';start.classList.add('hidden');finish.classList.remove('hidden');dl.classList.toggle('hidden',dayEntries(d.id).length===0);selectedDayId=d.id}else{panel.classList.add('closed');title.textContent=v?`Dia finalizado — ${fmtDayDate(v.day_date)}`:'Nenhum dia iniciado';meta.textContent=v?`${dayEntries(v.id).length} lançamentos • você pode baixar novamente o arquivo deste dia.`:'Clique em “Iniciar dia” para liberar novas contagens.';st.textContent=v?'FINALIZADO':'FECHADO';st.className='dayStatus closed';start.classList.remove('hidden');finish.classList.add('hidden');dl.classList.toggle('hidden',!v||dayEntries(v.id).length===0)}const mic=document.getElementById('micBtn'),it=document.getElementById('interpretBtn');if(mic)mic.disabled=!d;if(it)it.disabled=!d}
 function renderDays(){const el=document.getElementById('daysList');if(!el)return;if(!days.length){el.innerHTML='<div class="hint">Nenhum dia iniciado ainda.</div>';return}el.innerHTML=[...days].sort((a,b)=>String(b.started_at).localeCompare(String(a.started_at))).map(d=>{const n=dayEntries(d.id).length;return `<div class="dayItem"><div class="dayItemRow"><div><b>${fmtDayDate(d.day_date)}</b><div class="sub">Início: ${new Date(d.started_at).toLocaleString('pt-BR')}${d.finalized_at?` • Fim: ${new Date(d.finalized_at).toLocaleString('pt-BR')}`:''}</div></div><span class="dayStatus ${d.status==='closed'?'closed':''}">${d.status==='open'?'ABERTO':'FINALIZADO'}</span></div><div class="sub" style="margin-top:5px">${n} lançamento(s) • ${new Set(dayEntries(d.id).map(e=>e.material)).size} material(is) contado(s)</div><div class="dayItemActions"><button class="btn" onclick="selectDay('${d.id}')">Ver este dia</button><button class="btn primary" ${n?'':'disabled'} onclick="exportXlsx('${d.id}')">⬇ Baixar XLSX</button></div></div>`}).join('')}
 function selectDay(id){selectedDayId=id;renderAll();document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='totals'));['totals','history','config','days'].forEach(t=>document.getElementById('tab-'+t)?.classList.toggle('hidden',t!=='totals'))}
-function renderAll(){renderDayUI();renderTotals();renderHistory();renderConfig();renderDays()}
+function renderAll(opts={}){
+  const preserve=!!opts.preserveEditing;
+  const active=document.activeElement;
+  const editingConfig=preserve && active && (active.closest?.('#configList') || active.id==='configSearch' || active.id==='configUm');
+  renderDayUI();renderTotals();renderHistory();
+  if(!editingConfig)renderConfig();
+  renderDays();
+}
 function exportXlsx(dayId=(viewDay()?.id||'')){
   if(!window.XLSX){toast('Biblioteca XLSX não carregou. Verifique a internet e tente novamente.');return}
   const d=days.find(x=>x.id===dayId);if(!d){toast('Selecione ou inicie um dia para exportar.');return}const scoped=dayEntries(dayId);const totals=MATERIALS.map(m=>{const c=getCfg(m.material),u=c.um||m.um_sugerida,t=totalFor(m.material,dayId);return {Material:m.material,'Descrição MB52':m.descricao,UM:u,'Estoque MB52':Number(m.estoque||0),'Contagem acumulada':Number(t||0)}}).filter(r=>r['Contagem acumulada']!==0);
@@ -510,7 +548,7 @@ function exportXlsx(dayId=(viewDay()?.id||'')){
   toast('Arquivo XLSX gerado.');
 }
 
-document.getElementById('interpretBtn').onclick=interpret;document.getElementById('phrase').addEventListener('keydown',e=>{if(e.key==='Enter')interpret()});document.getElementById('search').oninput=renderTotals;document.getElementById('configSearch').oninput=renderConfig;document.getElementById('configUm').onchange=renderConfig;document.getElementById('configClear').onclick=()=>{document.getElementById('configSearch').value='';document.getElementById('configUm').value='';renderConfig()};document.getElementById('exportBtn').onclick=()=>exportXlsx();document.getElementById('startDayBtn').onclick=startDay;document.getElementById('finishDayBtn').onclick=finishDay;document.getElementById('downloadDayBtn').onclick=()=>exportXlsx();document.getElementById('resetBtn').onclick=async()=>{const d=viewDay();if(!d){toast('Nenhum dia selecionado.');return}if(d.status==='closed'){toast('Dias finalizados não podem ser limpos.');return}if(confirm('Limpar todos os lançamentos do dia em andamento?')){const ids=dayEntries(d.id).map(e=>e.id);entries=entries.filter(e=>e.day_id!==d.id);localStorage.setItem(STORE,JSON.stringify(entries));renderAll();if(cloudEnabled&&ids.length){try{await cloud.from('voice_entries').delete().eq('workspace',CLOUD_WORKSPACE).eq('day_id',d.id)}catch(err){console.warn(err)}}toast('Contagens do dia limpas.')}};
+const _syncBtn=document.getElementById('syncNowBtn');if(_syncBtn)_syncBtn.onclick=()=>{if(userIsEditing()){toast('Termine a edição do campo antes de atualizar a nuvem.');return}pullCloud(true)};document.getElementById('interpretBtn').onclick=interpret;document.getElementById('phrase').addEventListener('keydown',e=>{if(e.key==='Enter')interpret()});document.getElementById('search').oninput=renderTotals;document.getElementById('configSearch').oninput=renderConfig;document.getElementById('configUm').onchange=renderConfig;document.getElementById('configClear').onclick=()=>{document.getElementById('configSearch').value='';document.getElementById('configUm').value='';renderConfig()};document.getElementById('exportBtn').onclick=()=>exportXlsx();document.getElementById('startDayBtn').onclick=startDay;document.getElementById('finishDayBtn').onclick=finishDay;document.getElementById('downloadDayBtn').onclick=()=>exportXlsx();document.getElementById('resetBtn').onclick=async()=>{const d=viewDay();if(!d){toast('Nenhum dia selecionado.');return}if(d.status==='closed'){toast('Dias finalizados não podem ser limpos.');return}if(confirm('Limpar todos os lançamentos do dia em andamento?')){const ids=dayEntries(d.id).map(e=>e.id);entries=entries.filter(e=>e.day_id!==d.id);localStorage.setItem(STORE,JSON.stringify(entries));renderAll();if(cloudEnabled&&ids.length){try{await cloud.from('voice_entries').delete().eq('workspace',CLOUD_WORKSPACE).eq('day_id',d.id)}catch(err){console.warn(err)}}toast('Contagens do dia limpas.')}};
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));['totals','history','config','days'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab))});
 
 
