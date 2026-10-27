@@ -96,6 +96,16 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .dayPanel{margin-bottom:12px;border:2px solid #b8d8c4;background:#f4fbf6;border-radius:14px;padding:13px}
 .dayPanel.closed{border-color:#cbd5e1;background:#f8fafc}.dayHead{display:flex;justify-content:space-between;gap:12px;align-items:center}.dayTitle{font-weight:900;font-size:17px}.dayMeta{font-size:12px;color:var(--muted);margin-top:3px}.dayActions{display:flex;gap:8px;flex-wrap:wrap}.dayActions .btn{min-height:44px}.dayStatus{font-size:11px;font-weight:900;padding:5px 9px;border-radius:999px;background:#dcfce7;color:#166534}.dayStatus.closed{background:#e2e8f0;color:#475569}.daysList{display:grid;gap:8px}.dayItem{border:1px solid var(--line);border-radius:11px;padding:11px;background:#fff}.dayItemRow{display:flex;justify-content:space-between;gap:10px;align-items:center}.dayItemActions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 @media(max-width:760px){.dayHead{display:block}.dayStatus{display:inline-block;margin-top:7px}.dayActions{display:grid;grid-template-columns:1fr;margin-top:10px}.dayActions .btn{width:100%;min-height:50px}.dayItemRow{display:block}.dayItemActions{display:grid;grid-template-columns:1fr}.dayItemActions .btn{width:100%}}
+
+/* v19 - edicao concorrente por material */
+.config.lockedOther{opacity:.78;background:#f8fafc;border:1px solid #e2e8f0}
+.config.editingMine{background:#f0fdf4;border:1px solid #86efac;box-shadow:0 0 0 2px rgba(34,197,94,.08)}
+.editLockRow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+.lockPill{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:800;background:#eef2ff;color:#3730a3}
+.lockPill.mine{background:#dcfce7;color:#166534}
+.lockPill.other{background:#fee2e2;color:#991b1b}
+.config .inputs input:disabled,.config .inputs select:disabled{background:#f8fafc;color:#64748b;cursor:not-allowed}
+@media(max-width:720px){.editLockRow .btn{width:100%}.lockPill{font-size:12px}.config .inputs{grid-template-columns:1fr!important}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -103,7 +113,7 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 </head>
 <body>
 <div class="wrap">
-  <div class="top"><div><h1>Contagem por Voz — Mobile v16</h1><p>Contagem diária compartilhada em nuvem, otimizada para celular e tablet.</p></div><div><div class="badge" id="cloudBadge">SOMENTE LOCAL</div><div class="sub" id="cloudDetail" style="text-align:right;margin-top:4px">Supabase não configurado</div></div></div>
+  <div class="top"><div><h1>Contagem por Voz — Mobile v19</h1><p>Contagem diária compartilhada em nuvem, otimizada para celular e tablet.</p></div><div><div class="badge" id="cloudBadge">SOMENTE LOCAL</div><div class="sub" id="cloudDetail" style="text-align:right;margin-top:4px">Supabase não configurado</div></div></div>
 
   <div id="dayPanel" class="dayPanel">
     <div class="dayHead">
@@ -205,6 +215,66 @@ document.addEventListener('focusout',e=>{
 });
 const CLOUD_CONF=window.CONTAGEM_SUPABASE||{};
 const CLOUD_WORKSPACE=CLOUD_CONF.workspace||'leao-contagem-voz';
+const EDITOR_ID_KEY='contagem_voice_editor_id_v19';
+let EDITOR_ID=localStorage.getItem(EDITOR_ID_KEY)||'';
+if(!EDITOR_ID){EDITOR_ID=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random());localStorage.setItem(EDITOR_ID_KEY,EDITOR_ID)}
+let materialLocks={};
+let editingMaterial='';
+let lockHeartbeatTimer=null;
+let lockPollTimer=null;
+function validLock(l){return !!(l&&l.expires_at&&new Date(l.expires_at).getTime()>Date.now())}
+function lockFor(mat){const l=materialLocks[mat];return validLock(l)?l:null}
+function lockIsMine(mat){const l=lockFor(mat);return !!(l&&l.owner_id===EDITOR_ID)}
+async function loadMaterialLocks(refreshUI=false){
+  if(!cloudEnabled)return;
+  try{
+    const {data,error}=await cloud.from('voice_material_locks').select('*').eq('workspace',CLOUD_WORKSPACE).gt('expires_at',new Date().toISOString());
+    if(error)throw error;
+    materialLocks={};for(const r of (data||[]))materialLocks[r.material]=r;
+    if(editingMaterial&&!lockIsMine(editingMaterial))editingMaterial='';
+    if(refreshUI&&!userIsEditing())renderConfig();
+  }catch(err){console.warn('Supabase locks:',err)}
+}
+async function acquireMaterialLock(mat){
+  if(!cloudEnabled){editingMaterial=mat;renderConfig();return true}
+  try{
+    if(editingMaterial&&editingMaterial!==mat)await releaseMaterialLock(editingMaterial,false);
+    const {data,error}=await cloud.rpc('try_lock_voice_material',{p_workspace:CLOUD_WORKSPACE,p_material:mat,p_owner_id:EDITOR_ID});
+    if(error)throw error;
+    if(!data){await loadMaterialLocks(false);renderConfig();toast('Este material está sendo editado em outro aparelho.');return false}
+    editingMaterial=mat;
+    await loadMaterialLocks(false);
+    startLockHeartbeat();renderConfig();
+    setTimeout(()=>document.querySelector(`[data-lock-mat="${CSS.escape(mat)}"] input`)?.focus(),40);
+    return true;
+  }catch(err){console.warn('Lock acquire:',err);toast('Não foi possível bloquear o material para edição.');return false}
+}
+function startLockHeartbeat(){
+  clearInterval(lockHeartbeatTimer);
+  lockHeartbeatTimer=setInterval(async()=>{
+    if(!cloudEnabled||!editingMaterial)return;
+    try{const {data}=await cloud.rpc('try_lock_voice_material',{p_workspace:CLOUD_WORKSPACE,p_material:editingMaterial,p_owner_id:EDITOR_ID});if(!data){editingMaterial='';clearInterval(lockHeartbeatTimer);await loadMaterialLocks(true)}}catch(e){}
+  },15000);
+}
+async function releaseMaterialLock(mat=editingMaterial,refresh=true){
+  if(!mat)return;
+  if(cloudEnabled){try{await cloud.rpc('release_voice_material_lock',{p_workspace:CLOUD_WORKSPACE,p_material:mat,p_owner_id:EDITOR_ID})}catch(e){console.warn('Lock release:',e)}}
+  delete materialLocks[mat];if(editingMaterial===mat)editingMaterial='';clearInterval(lockHeartbeatTimer);
+  if(refresh)renderConfig();
+}
+async function finishMaterialEdit(mat){
+  const card=document.querySelector(`[data-lock-mat="${CSS.escape(mat)}"]`);
+  if(card){
+    const alias=card.querySelector('[data-cfg="aliases"]')?.value??'';
+    const factor=card.querySelector('[data-cfg="factor"]')?.value??'';
+    const um=card.querySelector('[data-cfg="um"]')?.value??'KG';
+    cfg[mat]={...getCfg(mat),aliases:alias,factor:factor,um};saveCfg();
+    await pushCfgCloud(mat);renderTotals();
+  }
+  await releaseMaterialLock(mat,true);toast('Edição concluída e material liberado.');
+}
+window.addEventListener('beforeunload',()=>{if(cloudEnabled&&editingMaterial){try{cloud.rpc('release_voice_material_lock',{p_workspace:CLOUD_WORKSPACE,p_material:editingMaterial,p_owner_id:EDITOR_ID})}catch(e){}}});
+
 function setCloudStatus(mode,detail){
   const b=document.getElementById('cloudBadge'),d=document.getElementById('cloudDetail');
   if(!b)return;
@@ -262,7 +332,7 @@ async function pullCloud(force=false){
 async function initCloud(){
   if(!cloudConfigured()){setCloudStatus('local','Configure supabase-config.js para compartilhar entre aparelhos.');return}
   if(!window.supabase?.createClient){setCloudStatus('offline','Biblioteca Supabase não carregou.');return}
-  try{cloud=window.supabase.createClient(CLOUD_CONF.url,CLOUD_CONF.anonKey,{auth:{persistSession:false,autoRefreshToken:false}});cloudEnabled=true;await pullCloud(true);setInterval(()=>{if(document.visibilityState==='visible')pullCloud()},60000);window.addEventListener('online',()=>pullCloud());document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pullCloud()});}
+  try{cloud=window.supabase.createClient(CLOUD_CONF.url,CLOUD_CONF.anonKey,{auth:{persistSession:false,autoRefreshToken:false}});cloudEnabled=true;await pullCloud(true);await loadMaterialLocks(true);setInterval(()=>{if(document.visibilityState==='visible')pullCloud()},60000);lockPollTimer=setInterval(()=>{if(document.visibilityState==='visible')loadMaterialLocks(true)},8000);window.addEventListener('online',()=>{pullCloud();loadMaterialLocks(true)});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){pullCloud();loadMaterialLocks(true)}});}
   catch(err){console.warn(err);setCloudStatus('offline','Não foi possível conectar ao Supabase.');}
 }
 
@@ -506,8 +576,15 @@ function renderConfig(){
     const c=getCfg(m.material);const hay=normText(m.material+' '+m.descricao+' '+voiceName(m)+' '+String(c.aliases||''));
     return (!q||hay.includes(q)||tokens(q).every(qt=>tokens(hay).some(ht=>tokenSimilar(qt,ht)>=.76))) && (!um||(c.um||m.um_sugerida).toUpperCase()===um);
   });
-  const info=document.getElementById('configFilterInfo');if(info)info.textContent=`Exibindo ${filtered.length} de ${MATERIALS.length} materiais.`;
-  el.innerHTML=filtered.map(m=>{const c=getCfg(m.material);return `<div class="config"><div><b>${m.material}</b> — ${m.descricao}</div><div class="sub">Nome base: ${voiceName(m)}</div><div class="inputs"><input value="${String(c.aliases||'').replace(/"/g,'&quot;')}" placeholder="apelidos; separados; por ;" onchange="updateCfg('${m.material}','aliases',this.value)"><input value="${c.factor??''}" placeholder="fator" inputmode="decimal" onchange="updateCfg('${m.material}','factor',this.value)"><select onchange="updateCfg('${m.material}','um',this.value)"><option ${c.um==='KG'?'selected':''}>KG</option><option ${c.um==='UN'?'selected':''}>UN</option></select></div></div>`}).join('') || '<div class="hint">Nenhum material encontrado para este filtro.</div>';
+  const info=document.getElementById('configFilterInfo');if(info)info.textContent=`Exibindo ${filtered.length} de ${MATERIALS.length} materiais. Cada material pode ser editado por apenas uma pessoa por vez.`;
+  el.innerHTML=filtered.map(m=>{
+    const c=getCfg(m.material),lk=lockFor(m.material),mine=lockIsMine(m.material),other=!!(lk&&!mine),editing=editingMaterial===m.material&&mine;
+    const disabled=editing?'':'disabled';
+    const cls=editing?' editingMine':other?' lockedOther':'';
+    const lockInfo=editing?'<span class="lockPill mine">● VOCÊ ESTÁ EDITANDO</span>':other?'<span class="lockPill other">🔒 EM EDIÇÃO EM OUTRO APARELHO</span>':'<span class="lockPill">○ DISPONÍVEL</span>';
+    const action=editing?`<button class="btn primary" onclick="finishMaterialEdit('${m.material}')">✓ Concluir edição</button>`:other?`<button class="btn" disabled>Bloqueado</button>`:`<button class="btn" onclick="acquireMaterialLock('${m.material}')">✎ Editar este material</button>`;
+    return `<div class="config${cls}" data-lock-mat="${m.material}"><div><b>${m.material}</b> — ${m.descricao}</div><div class="sub">Nome base: ${voiceName(m)}</div><div class="inputs"><input data-cfg="aliases" value="${String(c.aliases||'').replace(/"/g,'&quot;')}" placeholder="apelidos; separados; por ;" ${disabled}><input data-cfg="factor" value="${c.factor??''}" placeholder="fator" inputmode="decimal" ${disabled}><select data-cfg="um" ${disabled}><option ${c.um==='KG'?'selected':''}>KG</option><option ${c.um==='UN'?'selected':''}>UN</option></select></div><div class="editLockRow">${lockInfo}${action}</div></div>`;
+  }).join('') || '<div class="hint">Nenhum material encontrado para este filtro.</div>';
 }
 async function updateCfg(mat,key,val){
   cfg[mat]={...getCfg(mat),[key]:val};
