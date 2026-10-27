@@ -97,9 +97,16 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .dayPanel.closed{border-color:#cbd5e1;background:#f8fafc}.dayHead{display:flex;justify-content:space-between;gap:12px;align-items:center}.dayTitle{font-weight:900;font-size:17px}.dayMeta{font-size:12px;color:var(--muted);margin-top:3px}.dayActions{display:flex;gap:8px;flex-wrap:wrap}.dayActions .btn{min-height:44px}.dayStatus{font-size:11px;font-weight:900;padding:5px 9px;border-radius:999px;background:#dcfce7;color:#166534}.dayStatus.closed{background:#e2e8f0;color:#475569}.daysList{display:grid;gap:8px}.dayItem{border:1px solid var(--line);border-radius:11px;padding:11px;background:#fff}.dayItemRow{display:flex;justify-content:space-between;gap:10px;align-items:center}.dayItemActions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 @media(max-width:760px){.dayHead{display:block}.dayStatus{display:inline-block;margin-top:7px}.dayActions{display:grid;grid-template-columns:1fr;margin-top:10px}.dayActions .btn{width:100%;min-height:50px}.dayItemRow{display:block}.dayItemActions{display:grid;grid-template-columns:1fr}.dayItemActions .btn{width:100%}}
 
+/* v22 - selecao de materiais parecidos */
+.candidateChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.candidateBtn{text-align:left;white-space:normal;line-height:1.25;min-height:76px}.candidateBtn b{color:var(--green)}
+@media(max-width:680px){.candidateChoices{grid-template-columns:1fr}.candidateBtn{width:100%;min-height:74px}}
 /* v19 - edicao concorrente por material */
 .config.lockedOther{opacity:.78;background:#f8fafc;border:1px solid #e2e8f0}
-.config.editingMine{background:#f0fdf4;border:1px solid #86efac;box-shadow:0 0 0 2px rgba(34,197,94,.08)}
+.config.hasAlias{background:#ecfdf3;border:1px solid #86efac;border-radius:10px;padding-left:10px;padding-right:10px}
+.config.hasAlias .aliasStatus{color:#166534;font-weight:800}
+.config.editingMine{background:#dcfce7;border:1px solid #22c55e;box-shadow:0 0 0 2px rgba(34,197,94,.10)}
+.aliasCoverage{display:inline-flex;align-items:center;gap:8px;background:#e8f5ed;color:#166534;border:1px solid #9bc8ad;border-radius:999px;padding:7px 11px;font-weight:800;font-size:13px;margin:0 0 10px}
+.aliasDot{width:9px;height:9px;border-radius:50%;background:#16a34a;display:inline-block}
 .editLockRow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
 .lockPill{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:800;background:#eef2ff;color:#3730a3}
 .lockPill.mine{background:#dcfce7;color:#166534}
@@ -117,7 +124,7 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 <body>
 <div id="loginOverlay" class="loginOverlay"><div class="loginCard"><h2>Contagem por Voz</h2><div class="hint">Entre com seu usuário e senha.</div><input id="loginUsername" class="phrase" autocomplete="username" placeholder="Usuário"><input id="loginPassword" type="password" class="phrase" autocomplete="current-password" placeholder="Senha"><div class="actions"><button id="loginBtn" class="btn primary" style="width:100%">Entrar</button></div><div id="loginError" class="loginError"></div></div></div>
 <div class="wrap">
-  <div class="top"><div><h1>Contagem por Voz — Mobile v20</h1><p>Contagem diária compartilhada em nuvem com login, identificação de usuários e auditoria.</p><div class="userBar"><span id="currentUserChip" class="userChip">Não autenticado</span><button id="logoutBtn" class="btn hidden">Sair</button></div></div><div><div class="badge" id="cloudBadge">SOMENTE LOCAL</div><div class="sub" id="cloudDetail" style="text-align:right;margin-top:4px">Supabase não configurado</div></div></div>
+  <div class="top"><div><h1>Contagem por Voz — Mobile v21</h1><p>Contagem diária compartilhada em nuvem com login, identificação de usuários e auditoria.</p><div class="userBar"><span id="currentUserChip" class="userChip">Não autenticado</span><button id="logoutBtn" class="btn hidden">Sair</button></div></div><div><div class="badge" id="cloudBadge">SOMENTE LOCAL</div><div class="sub" id="cloudDetail" style="text-align:right;margin-top:4px">Supabase não configurado</div></div></div>
 
   <div id="dayPanel" class="dayPanel">
     <div class="dayHead">
@@ -163,7 +170,7 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
           <div id="mobileTotals" class="mobileTotals"></div><div class="tableWrap desktopTotals"><table><thead><tr><th>Material</th><th>Descrição MB52</th><th>Nome p/ voz</th><th>UM</th><th class="num">Contagem acumulada</th></tr></thead><tbody id="totalsBody"></tbody></table></div>
         </section>
         <section id="tab-history" class="hidden"><div id="historyList"></div></section>
-        <section id="tab-config" class="hidden"><div class="hint" style="margin-bottom:8px">Apelidos separados por ponto e vírgula. O fator padrão é opcional e nunca trava o valor falado. Enquanto você estiver digitando, a sincronização automática fica pausada para não apagar o texto.</div><div class="searchRow"><input id="configSearch" class="phrase" placeholder="Filtrar por código, descrição, nome de voz ou apelido..."/><select id="configUm" class="btn"><option value="">Todas as UM</option><option value="KG">KG</option><option value="UN">UN</option></select><button id="configClear" class="btn">Limpar filtro</button></div><div id="configFilterInfo" class="hint" style="margin-bottom:8px"></div><div id="configList" class="configList"></div></section>
+        <section id="tab-config" class="hidden"><div class="hint" style="margin-bottom:8px">Apelidos separados por ponto e vírgula. O fator padrão é opcional e nunca trava o valor falado. Enquanto você estiver digitando, a sincronização automática fica pausada para não apagar o texto.</div><div id="aliasCoverage" class="aliasCoverage"><span class="aliasDot"></span><span id="aliasCoverageText">0 / 0 materiais com apelido cadastrado</span></div><div class="searchRow"><input id="configSearch" class="phrase" placeholder="Filtrar por código, descrição, nome de voz ou apelido..."/><select id="configUm" class="btn"><option value="">Todas as UM</option><option value="KG">KG</option><option value="UN">UN</option></select><button id="configClear" class="btn">Limpar filtro</button></div><div id="configFilterInfo" class="hint" style="margin-bottom:8px"></div><div id="configList" class="configList"></div></section>
         <section id="tab-days" class="hidden"><div class="hint" style="margin-bottom:8px">Dias iniciados e finalizados. Você pode baixar novamente o XLSX de qualquer dia.</div><div id="daysList" class="daysList"></div></section>
         <section id="tab-audit" class="hidden"><div class="hint" style="margin-bottom:8px">Registro completo de contagens e alterações, com usuário, data e hora.</div><div class="searchRow"><input id="auditSearch" class="phrase" placeholder="Filtrar por usuário, ação ou material..."/><button id="auditRefresh" class="btn">Atualizar</button></div><div id="auditList"></div></section>
         <section id="tab-users" class="hidden"><div class="hint" style="margin-bottom:8px">Somente o administrador pode criar e desativar acessos.</div><div class="card" style="box-shadow:none;margin-bottom:12px"><div class="kv"><b>Nome</b><input id="newUserName" class="phrase" placeholder="Nome da pessoa"><b>Usuário</b><input id="newUsername" class="phrase" placeholder="Ex.: joao.silva"><b>Senha inicial</b><input id="newUserPassword" type="password" class="phrase" placeholder="Mínimo 6 caracteres"><b>Perfil</b><select id="newUserRole" class="btn"><option value="user">Usuário</option><option value="admin">Administrador</option></select></div><div class="actions"><button id="createUserBtn" class="btn primary">+ Criar login</button></div><div id="createUserMsg" class="hint"></div></div><div id="usersList"></div></section>
@@ -516,11 +523,14 @@ function findMatches(phrase){
       const aliasFamily=detectFamily(a);
       if(spokenFamily && aliasFamily && spokenFamily!==aliasFamily) continue;
       let sc=similarity(phrase,a);
-      if(phraseNorm.includes(normText(a)))sc+=.22;
-      best=Math.max(best,sc);
+      // Apelido cadastrado representa como o operador realmente fala o material.
+      // Quando a fala combina com o apelido, ele deve ter prioridade sobre descrições MB52 parecidas.
+      if(phraseNorm.includes(normText(a)))sc+=.28;
+      if(spokenFamily && aliasFamily===spokenFamily)sc+=.24;
+      if(sc>best) best=sc;
     }
-    // Bônus forte para correspondência da família explicitamente falada.
-    if(spokenFamily && materialFamily===spokenFamily) best+=.24;
+    // Bônus para correspondência da família na descrição base.
+    if(spokenFamily && materialFamily===spokenFamily) best+=.18;
 
     // Código do material dito explicitamente deve ter prioridade máxima.
     if(new RegExp('(?:^|\\s)'+String(m.material).replace(/\D/g,'')+'(?:\\s|$)').test(phraseNorm.replace(/\D+/g,' ')))best=1;
@@ -577,10 +587,28 @@ function interpret(options={}){
   const autoConfirm=false;
   const phrase=raw;
   if(!phrase){toast('Digite ou fale uma contagem.');return}
-  const matches=findMatches(phrase); const best=matches[0];
-  if(!best || best.score<0.34){box.className='preview error';box.innerHTML='<b>Material não identificado.</b><div class="hint">Tente usar mais palavras do texto breve ou cadastre um apelido na aba Cadastro de voz.</div>';pending=null;if(autoConfirm){setFeedback('error','Material não identificado','Não consegui identificar o material.');beep(260,140);speak('Não consegui identificar o material. Fale novamente começando por Contagem.')}return}
-  if(best.score<0.62 && matches[1] && best.score-matches[1].score<0.15){
-    box.className='preview warn'; box.innerHTML='<b>Encontrei mais de uma possibilidade. Escolha o material:</b><div class="actions">'+matches.slice(0,4).map((x,i)=>`<button class="btn" onclick="chooseMatch(${i})">${x.m.descricao} (${Math.round(x.score*100)}%)</button>`).join('')+'</div><div class="hint">Escolha o material correto antes de salvar.</div>'; window._matches=matches;pending={phrase,autoConfirm:false};if(autoConfirm){setFeedback('error','Preciso confirmar o material','Encontrei mais de uma opção. Escolha na tela.');beep(360,140);speak('Encontrei mais de um material possível. Escolha o material na tela.')}return;
+  const matches=findMatches(phrase); const best=matches[0], second=matches[1];
+  const usable=matches.filter(x=>x.score>=0.24);
+  // Se a fala for pouco clara, não escolha sozinho: ofereça os candidatos mais prováveis.
+  if(!best || best.score<0.34){
+    if(usable.length){
+      box.className='preview warn';
+      box.innerHTML='<b>Não consegui identificar com segurança. Qual destes materiais é o correto?</b><div class="actions">'+usable.slice(0,5).map((x,i)=>`<button class="btn" onclick="chooseMatch(${i})"><b>${x.m.material}</b> — ${x.m.descricao} (${Math.round(x.score*100)}%)</button>`).join('')+'</div><div class="hint">Selecione o material correto para continuar a contagem.</div>';
+      window._matches=usable; pending={phrase,autoConfirm:false}; return;
+    }
+    box.className='preview error';box.innerHTML='<b>Material não identificado.</b><div class="hint">Tente usar mais palavras do texto breve ou cadastre um apelido na aba Cadastro de voz.</div>';pending=null;return;
+  }
+  // Sempre pedir confirmação quando houver dois candidatos realmente próximos,
+  // mesmo que a pontuação do primeiro seja alta. Isso evita escolhas erradas em nomes parecidos.
+  const closeCandidates = second && second.score>=0.40 && (
+    (best.score-second.score)<=0.18 ||
+    (best.score<0.78 && second.score>=best.score*0.78)
+  );
+  if(closeCandidates){
+    const candidates=matches.filter(x=>x.score>=Math.max(0.32,best.score-0.24)).slice(0,5);
+    box.className='preview warn';
+    box.innerHTML='<b>Encontrei materiais parecidos. Selecione o correto:</b><div class="actions candidateChoices">'+candidates.map((x,i)=>`<button class="btn candidateBtn" onclick="chooseMatch(${i})"><b>${x.m.material}</b><br>${x.m.descricao}<br><span class="sub">Compatibilidade: ${Math.round(x.score*100)}%</span></button>`).join('')+'</div><div class="hint">O app não salvará nada até você escolher o material.</div>';
+    window._matches=candidates;pending={phrase,autoConfirm:false};return;
   }
   buildPreview(phrase,best.m,best.score,autoConfirm);
 }
@@ -610,14 +638,16 @@ function renderConfig(){
     const c=getCfg(m.material);const hay=normText(m.material+' '+m.descricao+' '+voiceName(m)+' '+String(c.aliases||''));
     return (!q||hay.includes(q)||tokens(q).every(qt=>tokens(hay).some(ht=>tokenSimilar(qt,ht)>=.76))) && (!um||(c.um||m.um_sugerida).toUpperCase()===um);
   });
-  const info=document.getElementById('configFilterInfo');if(info)info.textContent=`Exibindo ${filtered.length} de ${MATERIALS.length} materiais. Cada material pode ser editado por apenas uma pessoa por vez.`;
+  const aliasCount=MATERIALS.filter(m=>String(getCfg(m.material).aliases||'').trim().length>0).length;
+  const coverage=document.getElementById('aliasCoverageText');if(coverage)coverage.textContent=`${aliasCount} / ${MATERIALS.length} materiais com apelido cadastrado`;
+  const info=document.getElementById('configFilterInfo');if(info)info.textContent=`Exibindo ${filtered.length} de ${MATERIALS.length} materiais. Em verde: materiais com apelido cadastrado. Cada material pode ser editado por apenas uma pessoa por vez.`;
   el.innerHTML=filtered.map(m=>{
-    const c=getCfg(m.material),lk=lockFor(m.material),mine=lockIsMine(m.material),other=!!(lk&&!mine),editing=editingMaterial===m.material&&mine;
+    const c=getCfg(m.material),hasAlias=String(c.aliases||'').trim().length>0,lk=lockFor(m.material),mine=lockIsMine(m.material),other=!!(lk&&!mine),editing=editingMaterial===m.material&&mine;
     const disabled=editing?'':'disabled';
-    const cls=editing?' editingMine':other?' lockedOther':'';
+    const cls=(hasAlias?' hasAlias':'')+(editing?' editingMine':other?' lockedOther':'');
     const lockInfo=editing?'<span class="lockPill mine">● VOCÊ ESTÁ EDITANDO</span>':other?'<span class="lockPill other">🔒 EM EDIÇÃO EM OUTRO APARELHO</span>':'<span class="lockPill">○ DISPONÍVEL</span>';
     const action=editing?`<button class="btn primary" onclick="finishMaterialEdit('${m.material}')">✓ Concluir edição</button>`:other?`<button class="btn" disabled>Bloqueado</button>`:`<button class="btn" onclick="acquireMaterialLock('${m.material}')">✎ Editar este material</button>`;
-    return `<div class="config${cls}" data-lock-mat="${m.material}"><div><b>${m.material}</b> — ${m.descricao}</div><div class="sub">Nome base: ${voiceName(m)}</div><div class="inputs"><input data-cfg="aliases" value="${String(c.aliases||'').replace(/"/g,'&quot;')}" placeholder="apelidos; separados; por ;" ${disabled}><input data-cfg="factor" value="${c.factor??''}" placeholder="fator" inputmode="decimal" ${disabled}><select data-cfg="um" ${disabled}><option ${c.um==='KG'?'selected':''}>KG</option><option ${c.um==='UN'?'selected':''}>UN</option></select></div><div class="editLockRow">${lockInfo}${action}</div></div>`;
+    return `<div class="config${cls}" data-lock-mat="${m.material}"><div><b>${m.material}</b> — ${m.descricao}</div><div class="sub">Nome base: ${voiceName(m)}${hasAlias?' <span class="aliasStatus">• APELIDO CADASTRADO</span>':''}</div><div class="inputs"><input data-cfg="aliases" value="${String(c.aliases||'').replace(/"/g,'&quot;')}" placeholder="apelidos; separados; por ;" ${disabled}><input data-cfg="factor" value="${c.factor??''}" placeholder="fator" inputmode="decimal" ${disabled}><select data-cfg="um" ${disabled}><option ${c.um==='KG'?'selected':''}>KG</option><option ${c.um==='UN'?'selected':''}>UN</option></select></div><div class="editLockRow">${lockInfo}${action}</div></div>`;
   }).join('') || '<div class="hint">Nenhum material encontrado para este filtro.</div>';
 }
 async function updateCfg(mat,key,val){

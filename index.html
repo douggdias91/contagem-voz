@@ -97,6 +97,9 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .dayPanel.closed{border-color:#cbd5e1;background:#f8fafc}.dayHead{display:flex;justify-content:space-between;gap:12px;align-items:center}.dayTitle{font-weight:900;font-size:17px}.dayMeta{font-size:12px;color:var(--muted);margin-top:3px}.dayActions{display:flex;gap:8px;flex-wrap:wrap}.dayActions .btn{min-height:44px}.dayStatus{font-size:11px;font-weight:900;padding:5px 9px;border-radius:999px;background:#dcfce7;color:#166534}.dayStatus.closed{background:#e2e8f0;color:#475569}.daysList{display:grid;gap:8px}.dayItem{border:1px solid var(--line);border-radius:11px;padding:11px;background:#fff}.dayItemRow{display:flex;justify-content:space-between;gap:10px;align-items:center}.dayItemActions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 @media(max-width:760px){.dayHead{display:block}.dayStatus{display:inline-block;margin-top:7px}.dayActions{display:grid;grid-template-columns:1fr;margin-top:10px}.dayActions .btn{width:100%;min-height:50px}.dayItemRow{display:block}.dayItemActions{display:grid;grid-template-columns:1fr}.dayItemActions .btn{width:100%}}
 
+/* v22 - selecao de materiais parecidos */
+.candidateChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.candidateBtn{text-align:left;white-space:normal;line-height:1.25;min-height:76px}.candidateBtn b{color:var(--green)}
+@media(max-width:680px){.candidateChoices{grid-template-columns:1fr}.candidateBtn{width:100%;min-height:74px}}
 /* v19 - edicao concorrente por material */
 .config.lockedOther{opacity:.78;background:#f8fafc;border:1px solid #e2e8f0}
 .config.hasAlias{background:#ecfdf3;border:1px solid #86efac;border-radius:10px;padding-left:10px;padding-right:10px}
@@ -520,11 +523,14 @@ function findMatches(phrase){
       const aliasFamily=detectFamily(a);
       if(spokenFamily && aliasFamily && spokenFamily!==aliasFamily) continue;
       let sc=similarity(phrase,a);
-      if(phraseNorm.includes(normText(a)))sc+=.22;
-      best=Math.max(best,sc);
+      // Apelido cadastrado representa como o operador realmente fala o material.
+      // Quando a fala combina com o apelido, ele deve ter prioridade sobre descrições MB52 parecidas.
+      if(phraseNorm.includes(normText(a)))sc+=.28;
+      if(spokenFamily && aliasFamily===spokenFamily)sc+=.24;
+      if(sc>best) best=sc;
     }
-    // Bônus forte para correspondência da família explicitamente falada.
-    if(spokenFamily && materialFamily===spokenFamily) best+=.24;
+    // Bônus para correspondência da família na descrição base.
+    if(spokenFamily && materialFamily===spokenFamily) best+=.18;
 
     // Código do material dito explicitamente deve ter prioridade máxima.
     if(new RegExp('(?:^|\\s)'+String(m.material).replace(/\D/g,'')+'(?:\\s|$)').test(phraseNorm.replace(/\D+/g,' ')))best=1;
@@ -581,10 +587,28 @@ function interpret(options={}){
   const autoConfirm=false;
   const phrase=raw;
   if(!phrase){toast('Digite ou fale uma contagem.');return}
-  const matches=findMatches(phrase); const best=matches[0];
-  if(!best || best.score<0.34){box.className='preview error';box.innerHTML='<b>Material não identificado.</b><div class="hint">Tente usar mais palavras do texto breve ou cadastre um apelido na aba Cadastro de voz.</div>';pending=null;if(autoConfirm){setFeedback('error','Material não identificado','Não consegui identificar o material.');beep(260,140);speak('Não consegui identificar o material. Fale novamente começando por Contagem.')}return}
-  if(best.score<0.62 && matches[1] && best.score-matches[1].score<0.15){
-    box.className='preview warn'; box.innerHTML='<b>Encontrei mais de uma possibilidade. Escolha o material:</b><div class="actions">'+matches.slice(0,4).map((x,i)=>`<button class="btn" onclick="chooseMatch(${i})">${x.m.descricao} (${Math.round(x.score*100)}%)</button>`).join('')+'</div><div class="hint">Escolha o material correto antes de salvar.</div>'; window._matches=matches;pending={phrase,autoConfirm:false};if(autoConfirm){setFeedback('error','Preciso confirmar o material','Encontrei mais de uma opção. Escolha na tela.');beep(360,140);speak('Encontrei mais de um material possível. Escolha o material na tela.')}return;
+  const matches=findMatches(phrase); const best=matches[0], second=matches[1];
+  const usable=matches.filter(x=>x.score>=0.24);
+  // Se a fala for pouco clara, não escolha sozinho: ofereça os candidatos mais prováveis.
+  if(!best || best.score<0.34){
+    if(usable.length){
+      box.className='preview warn';
+      box.innerHTML='<b>Não consegui identificar com segurança. Qual destes materiais é o correto?</b><div class="actions">'+usable.slice(0,5).map((x,i)=>`<button class="btn" onclick="chooseMatch(${i})"><b>${x.m.material}</b> — ${x.m.descricao} (${Math.round(x.score*100)}%)</button>`).join('')+'</div><div class="hint">Selecione o material correto para continuar a contagem.</div>';
+      window._matches=usable; pending={phrase,autoConfirm:false}; return;
+    }
+    box.className='preview error';box.innerHTML='<b>Material não identificado.</b><div class="hint">Tente usar mais palavras do texto breve ou cadastre um apelido na aba Cadastro de voz.</div>';pending=null;return;
+  }
+  // Sempre pedir confirmação quando houver dois candidatos realmente próximos,
+  // mesmo que a pontuação do primeiro seja alta. Isso evita escolhas erradas em nomes parecidos.
+  const closeCandidates = second && second.score>=0.40 && (
+    (best.score-second.score)<=0.18 ||
+    (best.score<0.78 && second.score>=best.score*0.78)
+  );
+  if(closeCandidates){
+    const candidates=matches.filter(x=>x.score>=Math.max(0.32,best.score-0.24)).slice(0,5);
+    box.className='preview warn';
+    box.innerHTML='<b>Encontrei materiais parecidos. Selecione o correto:</b><div class="actions candidateChoices">'+candidates.map((x,i)=>`<button class="btn candidateBtn" onclick="chooseMatch(${i})"><b>${x.m.material}</b><br>${x.m.descricao}<br><span class="sub">Compatibilidade: ${Math.round(x.score*100)}%</span></button>`).join('')+'</div><div class="hint">O app não salvará nada até você escolher o material.</div>';
+    window._matches=candidates;pending={phrase,autoConfirm:false};return;
   }
   buildPreview(phrase,best.m,best.score,autoConfirm);
 }
