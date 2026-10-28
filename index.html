@@ -744,13 +744,24 @@ async function confirmMaterialLines(mat,ev){
   if(!card)return;
   const details=card.querySelector('.linePicker');
   const selected=[...card.querySelectorAll('[data-line]')].filter(x=>x.checked).map(x=>x.value);
-  cfg[mat]={...getCfg(mat),production_line:selected.join(';')};
+  // Preserva TODOS os valores atuais do cartão antes de salvar as linhas.
+  // Isso evita perder Tipo, apelidos, fator, UM, produto ou especificação ainda não concluídos.
+  const current={
+    aliases:card.querySelector('[data-cfg="aliases"]')?.value??getCfg(mat).aliases,
+    factor:card.querySelector('[data-cfg="factor"]')?.value??getCfg(mat).factor,
+    um:card.querySelector('[data-cfg="um"]')?.value??getCfg(mat).um,
+    material_type:card.querySelector('[data-cfg="material_type"]')?.value??getCfg(mat).material_type,
+    production_line:selected.join(';'),
+    product_name:card.querySelector('[data-cfg="product_name"]')?.value??getCfg(mat).product_name,
+    specification:card.querySelector('[data-cfg="specification"]')?.value??getCfg(mat).specification
+  };
+  cfg[mat]={...getCfg(mat),...current};
   saveCfg();
   const ok=await pushCfgCloud(mat);
   if(details)details.open=false;
   renderConfig();renderTotals();
   toast(ok||!cloudEnabled?`Linhas confirmadas: ${selected.length?selected.join(' + '):'nenhuma'}`:'Linhas salvas localmente; sincronizaremos depois.');
-  if(cloudEnabled&&ok)setCloudStatus('online','Linhas salvas na nuvem.');
+  if(cloudEnabled&&ok)setCloudStatus('online','Linhas e demais campos preservados na nuvem.');
 }
 function cancelMaterialLines(mat,ev){
   ev?.preventDefault();ev?.stopPropagation();
