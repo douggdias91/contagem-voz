@@ -513,31 +513,37 @@ function findMatches(phrase){
     const c=getCfg(m.material);
     const materialFamily=detectFamily(voiceName(m));
 
-    // Palavra-chave de família tem prioridade. Se a fala diz CAIXINHA, materiais BLEND,
-    // FILME, ETIQUETA etc. ficam fora da disputa, ainda que sabores coincidam.
     if(spokenFamily && materialFamily && spokenFamily!==materialFamily) continue;
 
     let best=similarity(phrase,voiceName(m));
+    let matchSource='base', exactAlias=false, exactCode=false;
+    const baseNorm=normText(voiceName(m));
+    if(baseNorm && phraseNorm.includes(baseNorm) && tokens(baseNorm).filter(t=>!STOP_TOKENS.has(t)).length>=2){
+      best=Math.max(best,.92);matchSource='base-exact';
+    }
+
     const aliases=String(c.aliases||'').split(';').map(x=>x.trim()).filter(Boolean);
     for(const a of aliases){
       const aliasFamily=detectFamily(a);
       if(spokenFamily && aliasFamily && spokenFamily!==aliasFamily) continue;
+      const aliasNorm=normText(a);
       let sc=similarity(phrase,a);
-      // Apelido cadastrado representa como o operador realmente fala o material.
-      // Quando a fala combina com o apelido, ele deve ter prioridade sobre descrições MB52 parecidas.
-      if(phraseNorm.includes(normText(a)))sc+=.28;
-      if(spokenFamily && aliasFamily===spokenFamily)sc+=.24;
-      if(sc>best) best=sc;
+      if(aliasNorm && phraseNorm.includes(aliasNorm)){
+        sc=Math.max(sc,.96);exactAlias=true;
+      }
+      if(spokenFamily && aliasFamily===spokenFamily)sc+=.18;
+      if(sc>best){best=sc;matchSource='alias'}
     }
-    // Bônus para correspondência da família na descrição base.
-    if(spokenFamily && materialFamily===spokenFamily) best+=.18;
+    if(spokenFamily && materialFamily===spokenFamily) best+=.10;
 
-    // Código do material dito explicitamente deve ter prioridade máxima.
-    if(new RegExp('(?:^|\\s)'+String(m.material).replace(/\D/g,'')+'(?:\\s|$)').test(phraseNorm.replace(/\D+/g,' ')))best=1;
-    out.push({m,score:Math.min(1,best),family:materialFamily});
+    if(new RegExp('(?:^|\\s)'+String(m.material).replace(/\\D/g,'')+'(?:\\s|$)').test(phraseNorm.replace(/\\D+/g,' '))){
+      best=1;exactCode=true;matchSource='codigo';
+    }
+    out.push({m,score:Math.min(1,best),family:materialFamily,matchSource,exactAlias,exactCode});
   }
   return out.sort((a,b)=>b.score-a.score).slice(0,5);
 }
+
 function numsFromPhrase(s){
   const x=spokenNorm(s).replace(/(\d)\.(\d{3})(?=\D|$)/g,'$1$2');
   return [...x.matchAll(/\d+(?:[.,]\d+)?/g)].map(m=>({v:Number(m[0].replace(',','.')),i:m.index,raw:m[0]}));
@@ -588,30 +594,49 @@ function interpret(options={}){
   const phrase=raw;
   if(!phrase){toast('Digite ou fale uma contagem.');return}
   const matches=findMatches(phrase); const best=matches[0], second=matches[1];
-  const usable=matches.filter(x=>x.score>=0.24);
-  // Se a fala for pouco clara, não escolha sozinho: ofereça os candidatos mais prováveis.
-  if(!best || best.score<0.34){
-    if(usable.length){
-      box.className='preview warn';
-      box.innerHTML='<b>Não consegui identificar com segurança. Qual destes materiais é o correto?</b><div class="actions">'+usable.slice(0,5).map((x,i)=>`<button class="btn" onclick="chooseMatch(${i})"><b>${x.m.material}</b> — ${x.m.descricao} (${Math.round(x.score*100)}%)</button>`).join('')+'</div><div class="hint">Selecione o material correto para continuar a contagem.</div>';
-      window._matches=usable; pending={phrase,autoConfirm:false}; return;
-    }
+  const usable=matches.filter(x=>x.score>=0.26);
+  if(!best){
     box.className='preview error';box.innerHTML='<b>Material não identificado.</b><div class="hint">Tente usar mais palavras do texto breve ou cadastre um apelido na aba Cadastro de voz.</div>';pending=null;return;
   }
-  // Sempre pedir confirmação quando houver dois candidatos realmente próximos,
-  // mesmo que a pontuação do primeiro seja alta. Isso evita escolhas erradas em nomes parecidos.
-  const closeCandidates = second && second.score>=0.40 && (
-    (best.score-second.score)<=0.18 ||
-    (best.score<0.78 && second.score>=best.score*0.78)
-  );
-  if(closeCandidates){
-    const candidates=matches.filter(x=>x.score>=Math.max(0.32,best.score-0.24)).slice(0,5);
-    box.className='preview warn';
-    box.innerHTML='<b>Encontrei materiais parecidos. Selecione o correto:</b><div class="actions candidateChoices">'+candidates.map((x,i)=>`<button class="btn candidateBtn" onclick="chooseMatch(${i})"><b>${x.m.material}</b><br>${x.m.descricao}<br><span class="sub">Compatibilidade: ${Math.round(x.score*100)}%</span></button>`).join('')+'</div><div class="hint">O app não salvará nada até você escolher o material.</div>';
-    window._matches=candidates;pending={phrase,autoConfirm:false};return;
+
+  const secondScore=second?.score||0;
+  const margin=best.score-secondScore;
+
+  // Regra principal: o app decide sozinho quando existe um vencedor claro.
+  // Seleção só aparece quando há dúvida real.
+  const clearWinner = best.exactCode || best.exactAlias ||
+    best.score>=0.82 ||
+    (best.score>=0.68 && margin>=0.08) ||
+    (best.score>=0.58 && margin>=0.13) ||
+    (best.score>=0.50 && margin>=0.20);
+
+  if(clearWinner){
+    buildPreview(phrase,best.m,best.score,autoConfirm);return;
   }
+
+  const genuineAmbiguity = second && second.score>=0.42 && (
+    (best.score>=0.62 && margin<0.07) ||
+    (best.score>=0.50 && margin<0.10) ||
+    (best.score<0.50 && margin<0.15)
+  );
+
+  if(genuineAmbiguity || best.score<0.50){
+    const floor=Math.max(0.30,best.score-0.14);
+    const candidates=usable.filter(x=>x.score>=floor).slice(0,5);
+    if(candidates.length>=2){
+      box.className='preview warn';
+      box.innerHTML='<b>Fiquei em dúvida entre alguns materiais. Qual é o correto?</b><div class="actions candidateChoices">'+candidates.map((x,i)=>`<button class="btn candidateBtn" onclick="chooseMatch(${i})"><b>${x.m.material}</b><br>${x.m.descricao}<br><span class="sub">Compatibilidade: ${Math.round(x.score*100)}%</span></button>`).join('')+'</div><div class="hint">A seleção só aparece quando o reconhecimento não tem segurança suficiente para decidir sozinho.</div>';
+      window._matches=candidates;pending={phrase,autoConfirm:false};return;
+    }
+  }
+
+  if(best.score<0.38){
+    box.className='preview error';box.innerHTML='<b>Não consegui identificar o material com segurança.</b><div class="hint">Tente falar mais detalhes do material ou cadastre um apelido.</div>';pending=null;return;
+  }
+
   buildPreview(phrase,best.m,best.score,autoConfirm);
 }
+
 function chooseMatch(i){const x=window._matches[i];buildPreview(pending.phrase,x.m,x.score,false)}
 function buildPreview(phrase,m,score,autoConfirm=false){
   const calc=parseCalc(phrase,m);const box=document.getElementById('preview');
