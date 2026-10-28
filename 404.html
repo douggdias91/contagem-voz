@@ -117,7 +117,7 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 
 /* v20 - autenticação, usuários e auditoria */
 .loginOverlay{position:fixed;inset:0;background:#f3f7f5;z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px}.loginCard{width:min(430px,100%);background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:24px}.loginCard h2{margin:0 0 6px}.loginCard .phrase{margin-top:10px}.loginError{margin-top:10px;color:#b42318;font-size:13px}.userBar{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;margin-top:7px}.userChip{background:#eef4f0;border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700}.adminOnly.hidden{display:none!important}.auditItem,.userItem{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px}.roleAdmin{background:#ede9fe;color:#5b21b6}.roleUser{background:#e0f2fe;color:#075985}@media(max-width:720px){.userBar{justify-content:flex-start}.loginCard{padding:18px}}
-</style>
+.linePickerActions{grid-column:1/-1;position:sticky;bottom:0;display:flex;gap:8px;padding:10px 0 2px;background:#fff;border-top:1px solid #e5ece8;margin-top:4px}.linePickerActions .btn{flex:1}</style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="supabase-config.js"></script>
@@ -125,7 +125,7 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 <body>
 <div id="loginOverlay" class="loginOverlay"><div class="loginCard"><h2>Contagem por Voz</h2><div class="hint">Entre com seu usuário e senha.</div><input id="loginUsername" class="phrase" autocomplete="username" placeholder="Usuário"><input id="loginPassword" type="password" class="phrase" autocomplete="current-password" placeholder="Senha"><div class="actions"><button id="loginBtn" class="btn primary" style="width:100%">Entrar</button></div><div id="loginError" class="loginError"></div></div></div>
 <div class="wrap">
-  <div class="top"><div><h1>Contagem por Voz — Mobile v26</h1><p>Contagem diária compartilhada em nuvem com login, identificação de usuários e auditoria.</p><div class="userBar"><span id="currentUserChip" class="userChip">Não autenticado</span><button id="logoutBtn" class="btn hidden">Sair</button></div></div><div><div class="badge" id="cloudBadge">SOMENTE LOCAL</div><div class="sub" id="cloudDetail" style="text-align:right;margin-top:4px">Supabase não configurado</div></div></div>
+  <div class="top"><div><h1>Contagem por Voz — Mobile v28</h1><p>Contagem diária compartilhada em nuvem com login, identificação de usuários e auditoria.</p><div class="userBar"><span id="currentUserChip" class="userChip">Não autenticado</span><button id="logoutBtn" class="btn hidden">Sair</button></div></div><div><div class="badge" id="cloudBadge">SOMENTE LOCAL</div><div class="sub" id="cloudDetail" style="text-align:right;margin-top:4px">Supabase não configurado</div></div></div>
 
   <div id="dayPanel" class="dayPanel">
     <div class="dayHead">
@@ -725,7 +725,7 @@ function renderConfig(){
     const cls=(hasAlias?' hasAlias':'')+(isClassified?' isClassified':'')+(editing?' editingMine':other?' lockedOther':'');
     const lockInfo=editing?'<span class="lockPill mine">● VOCÊ ESTÁ EDITANDO</span>':other?'<span class="lockPill other">🔒 EM EDIÇÃO EM OUTRO APARELHO</span>':'<span class="lockPill">○ DISPONÍVEL</span>';
     const action=editing?`<button class="btn primary" onclick="finishMaterialEdit('${m.material}')">✓ Concluir edição</button>`:other?`<button class="btn" disabled>Bloqueado</button>`:`<button class="btn" onclick="acquireMaterialLock('${m.material}')">✎ Editar este material</button>`;
-    const sugType=c.material_type||detectType(m.descricao),sugLine=lineList(c.production_line)[0]||detectLine(m.descricao);const selectedLines=lineList(c.production_line);const lineSummary=selectedLines.length?selectedLines.map(x=>`<span class="lineSelected">${x}</span>`).join(''):'<span class="linePlaceholder">Selecionar linha(s)</span>';const lineChecks=`<details class="linePicker${disabled?' disabled':''}"><summary><span class="linePickerLabel">Linha</span>${lineSummary}</summary><div class="lineOptions">${LINE_OPTIONS.map(x=>`<label class="lineChoice"><input type="checkbox" data-line value="${x}" ${selectedLines.includes(x)?'checked':''} ${disabled}>${x}</label>`).join('')}</div></details>`;
+    const sugType=c.material_type||detectType(m.descricao),sugLine=lineList(c.production_line)[0]||detectLine(m.descricao);const selectedLines=lineList(c.production_line);const lineSummary=selectedLines.length?selectedLines.map(x=>`<span class="lineSelected">${x}</span>`).join(''):'<span class="linePlaceholder">Selecionar linha(s)</span>';const lineChecks=`<details class="linePicker${disabled?' disabled':''}"><summary><span class="linePickerLabel">Linha</span>${lineSummary}</summary><div class="lineOptions">${LINE_OPTIONS.map(x=>`<label class="lineChoice"><input type="checkbox" data-line value="${x}" ${selectedLines.includes(x)?'checked':''} ${disabled}>${x}</label>`).join('')}<div class="linePickerActions"><button type="button" class="btn primary" onclick="confirmMaterialLines('${m.material}',event)" ${disabled}>✓ Confirmar linhas</button><button type="button" class="btn" onclick="cancelMaterialLines('${m.material}',event)" ${disabled}>Cancelar</button></div></div></details>`;
     return `<div class="config${cls}" data-lock-mat="${m.material}"><div><b>${m.material}</b> — ${m.descricao}</div><div class="sub">Nome base: ${voiceName(m)}${hasAlias?' <span class="aliasStatus">• APELIDO CADASTRADO</span>':''}${isClassified?' <span class="classStatus">◆ CLASSIFICADO</span>':''}</div><div class="inputs"><input data-cfg="aliases" value="${esc(c.aliases)}" placeholder="apelidos; separados; por ;" ${disabled}><input data-cfg="factor" value="${esc(c.factor)}" placeholder="fator" inputmode="decimal" ${disabled}><select data-cfg="um" ${disabled}><option ${c.um==='KG'?'selected':''}>KG</option><option ${c.um==='UN'?'selected':''}>UN</option></select></div><div class="classInputs"><select data-cfg="material_type" ${disabled}>${opts(TYPE_OPTIONS,c.material_type||'')}</select>${lineChecks}<input data-cfg="product_name" value="${esc(c.product_name)}" placeholder="Produto / sabor (ex.: Camomila)" ${disabled}><input data-cfg="specification" value="${esc(c.specification)}" placeholder="Especificação (ex.: 15x36, 10UN)" ${disabled}></div>${editing&&(!c.material_type||!c.production_line)&&(sugType||sugLine)?`<div class="hint">Sugestão pela descrição: ${sugType?`Tipo <b>${sugType}</b>`:''}${sugType&&sugLine?' • ':''}${sugLine?`Linha <b>${sugLine}</b>`:''}. Se estiver correto, selecione nos campos acima.</div>`:''}<div class="editLockRow">${lockInfo}${action}</div></div>`;
   }).join('') || '<div class="hint">Nenhum material encontrado para este filtro.</div>';
 }
@@ -736,6 +736,29 @@ async function updateCfg(mat,key,val){
   const ok=await pushCfgCloud(mat);
   if(cloudEnabled&&ok)setCloudStatus('online','Cadastro salvo na nuvem. Continue digitando normalmente.');
   scheduleDeferredCloudSync();
+}
+
+async function confirmMaterialLines(mat,ev){
+  ev?.preventDefault();ev?.stopPropagation();
+  const card=document.querySelector(`[data-lock-mat="${CSS.escape(mat)}"]`);
+  if(!card)return;
+  const details=card.querySelector('.linePicker');
+  const selected=[...card.querySelectorAll('[data-line]')].filter(x=>x.checked).map(x=>x.value);
+  cfg[mat]={...getCfg(mat),production_line:selected.join(';')};
+  saveCfg();
+  const ok=await pushCfgCloud(mat);
+  if(details)details.open=false;
+  renderConfig();renderTotals();
+  toast(ok||!cloudEnabled?`Linhas confirmadas: ${selected.length?selected.join(' + '):'nenhuma'}`:'Linhas salvas localmente; sincronizaremos depois.');
+  if(cloudEnabled&&ok)setCloudStatus('online','Linhas salvas na nuvem.');
+}
+function cancelMaterialLines(mat,ev){
+  ev?.preventDefault();ev?.stopPropagation();
+  const card=document.querySelector(`[data-lock-mat="${CSS.escape(mat)}"]`);
+  if(!card)return;
+  const selected=lineList(getCfg(mat).production_line);
+  card.querySelectorAll('[data-line]').forEach(x=>x.checked=selected.includes(x.value));
+  const details=card.querySelector('.linePicker');if(details)details.open=false;
 }
 function renderDayUI(){const d=activeDay();const v=viewDay();const panel=document.getElementById('dayPanel');const title=document.getElementById('dayTitle');const meta=document.getElementById('dayMeta');const st=document.getElementById('dayStatus');const start=document.getElementById('startDayBtn');const finish=document.getElementById('finishDayBtn');const dl=document.getElementById('downloadDayBtn');if(d){panel.classList.remove('closed');title.textContent=`Dia em andamento — ${fmtDayDate(d.day_date)}`;meta.textContent=`Iniciado às ${new Date(d.started_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} por ${d.started_by_name||'usuário não identificado'} • ${dayEntries(d.id).length} lançamentos`;st.textContent='ABERTO';st.className='dayStatus';start.classList.add('hidden');finish.classList.remove('hidden');dl.classList.toggle('hidden',dayEntries(d.id).length===0);selectedDayId=d.id}else{panel.classList.add('closed');title.textContent=v?`Dia finalizado — ${fmtDayDate(v.day_date)}`:'Nenhum dia iniciado';meta.textContent=v?`${dayEntries(v.id).length} lançamentos • você pode baixar novamente o arquivo deste dia.`:'Clique em “Iniciar dia” para liberar novas contagens.';st.textContent=v?'FINALIZADO':'FECHADO';st.className='dayStatus closed';start.classList.remove('hidden');finish.classList.add('hidden');dl.classList.toggle('hidden',!v||dayEntries(v.id).length===0)}const mic=document.getElementById('micBtn'),it=document.getElementById('interpretBtn');if(mic)mic.disabled=!d;if(it)it.disabled=!d}
 function renderDays(){const el=document.getElementById('daysList');if(!el)return;if(!days.length){el.innerHTML='<div class="hint">Nenhum dia iniciado ainda.</div>';return}el.innerHTML=[...days].sort((a,b)=>String(b.started_at).localeCompare(String(a.started_at))).map(d=>{const n=dayEntries(d.id).length;return `<div class="dayItem"><div class="dayItemRow"><div><b>${fmtDayDate(d.day_date)}</b><div class="sub">Início: ${new Date(d.started_at).toLocaleString('pt-BR')}${d.finalized_at?` • Fim: ${new Date(d.finalized_at).toLocaleString('pt-BR')} por ${d.finalized_by_name||'usuário não identificado'}`:''}</div></div><span class="dayStatus ${d.status==='closed'?'closed':''}">${d.status==='open'?'ABERTO':'FINALIZADO'}</span></div><div class="sub" style="margin-top:5px">${n} lançamento(s) • ${new Set(dayEntries(d.id).map(e=>e.material)).size} material(is) contado(s)</div><div class="dayItemActions"><button class="btn" onclick="selectDay('${d.id}')">Ver este dia</button><button class="btn primary" ${n?'':'disabled'} onclick="exportXlsx('${d.id}')">⬇ Baixar XLSX</button></div></div>`}).join('')}
