@@ -112,7 +112,7 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .lockPill.mine{background:#dcfce7;color:#166534}
 .lockPill.other{background:#fee2e2;color:#991b1b}
 .config .inputs input:disabled,.config .inputs select:disabled{background:#f8fafc;color:#64748b;cursor:not-allowed}
-.config .classInputs{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-top:7px}.config .classInputs input,.config .classInputs select{border:1px solid var(--line);border-radius:8px;padding:7px;width:100%}.classStatus{display:inline-flex;align-items:center;gap:6px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;margin-left:6px}.classCoverage{display:inline-flex;align-items:center;gap:8px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:999px;padding:7px 11px;font-weight:800;font-size:13px;margin:0 0 10px 6px}.config.isClassified{box-shadow:inset 4px 0 0 #3b82f6}.config .classInputs input:disabled,.config .classInputs select:disabled{background:#f8fafc;color:#64748b;cursor:not-allowed}@media(max-width:900px){.config .classInputs{grid-template-columns:1fr 1fr}}
+.config .classInputs{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-top:7px}.lineMulti{border:1px solid var(--line);border-radius:8px;padding:7px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;background:#fff;min-height:40px}.lineChip{display:inline-flex;align-items:center;gap:4px;border:1px solid #dbe4df;border-radius:999px;padding:4px 7px;font-size:11px;background:#f8faf9}.lineChip input{width:auto;margin:0}.lineMulti.disabled{background:#f8fafc;color:#64748b;pointer-events:none}.config .classInputs input,.config .classInputs select{border:1px solid var(--line);border-radius:8px;padding:7px;width:100%}.classStatus{display:inline-flex;align-items:center;gap:6px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;margin-left:6px}.classCoverage{display:inline-flex;align-items:center;gap:8px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:999px;padding:7px 11px;font-weight:800;font-size:13px;margin:0 0 10px 6px}.config.isClassified{box-shadow:inset 4px 0 0 #3b82f6}.config .classInputs input:disabled,.config .classInputs select:disabled{background:#f8fafc;color:#64748b;cursor:not-allowed}@media(max-width:900px){.config .classInputs{grid-template-columns:1fr 1fr}}
 @media(max-width:720px){.editLockRow .btn{width:100%}.lockPill{font-size:12px}.config .inputs,.config .classInputs{grid-template-columns:1fr!important}}
 
 /* v20 - autenticação, usuários e auditoria */
@@ -125,7 +125,7 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 <body>
 <div id="loginOverlay" class="loginOverlay"><div class="loginCard"><h2>Contagem por Voz</h2><div class="hint">Entre com seu usuário e senha.</div><input id="loginUsername" class="phrase" autocomplete="username" placeholder="Usuário"><input id="loginPassword" type="password" class="phrase" autocomplete="current-password" placeholder="Senha"><div class="actions"><button id="loginBtn" class="btn primary" style="width:100%">Entrar</button></div><div id="loginError" class="loginError"></div></div></div>
 <div class="wrap">
-  <div class="top"><div><h1>Contagem por Voz — Mobile v25</h1><p>Contagem diária compartilhada em nuvem com login, identificação de usuários e auditoria.</p><div class="userBar"><span id="currentUserChip" class="userChip">Não autenticado</span><button id="logoutBtn" class="btn hidden">Sair</button></div></div><div><div class="badge" id="cloudBadge">SOMENTE LOCAL</div><div class="sub" id="cloudDetail" style="text-align:right;margin-top:4px">Supabase não configurado</div></div></div>
+  <div class="top"><div><h1>Contagem por Voz — Mobile v26</h1><p>Contagem diária compartilhada em nuvem com login, identificação de usuários e auditoria.</p><div class="userBar"><span id="currentUserChip" class="userChip">Não autenticado</span><button id="logoutBtn" class="btn hidden">Sair</button></div></div><div><div class="badge" id="cloudBadge">SOMENTE LOCAL</div><div class="sub" id="cloudDetail" style="text-align:right;margin-top:4px">Supabase não configurado</div></div></div>
 
   <div id="dayPanel" class="dayPanel">
     <div class="dayHead">
@@ -171,7 +171,7 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
           <div id="mobileTotals" class="mobileTotals"></div><div class="tableWrap desktopTotals"><table><thead><tr><th>Material</th><th>Descrição MB52</th><th>Nome p/ voz</th><th>UM</th><th class="num">Contagem acumulada</th></tr></thead><tbody id="totalsBody"></tbody></table></div>
         </section>
         <section id="tab-history" class="hidden"><div id="historyList"></div></section>
-        <section id="tab-config" class="hidden"><div class="hint" style="margin-bottom:8px">Apelidos separados por ponto e vírgula. Classifique também <b>Tipo</b>, <b>Linha</b>, <b>Produto/Sabor</b> e <b>Especificação</b>. Esses dados estruturados passam a ter prioridade no reconhecimento da fala. O fator padrão é opcional e nunca trava o valor falado.</div><div id="aliasCoverage" class="aliasCoverage"><span class="aliasDot"></span><span id="aliasCoverageText">0 / 0 materiais com apelido cadastrado</span></div><div class="classCoverage"><span>◆</span><span id="classCoverageText">0 / 0 materiais classificados</span></div><div class="searchRow"><input id="configSearch" class="phrase" placeholder="Filtrar por código, descrição, nome de voz ou apelido..."/><select id="configUm" class="btn"><option value="">Todas as UM</option><option value="KG">KG</option><option value="UN">UN</option></select><button id="configClear" class="btn">Limpar filtro</button></div><div id="configFilterInfo" class="hint" style="margin-bottom:8px"></div><div id="configList" class="configList"></div></section>
+        <section id="tab-config" class="hidden"><div class="hint" style="margin-bottom:8px">Apelidos separados por ponto e vírgula. Classifique também <b>Tipo</b>, <b>Linha(s)</b>, <b>Produto/Sabor</b> e <b>Especificação</b>. Um material pode pertencer a mais de uma linha. Esses dados estruturados passam a ter prioridade no reconhecimento da fala. O fator padrão é opcional e nunca trava o valor falado.</div><div id="aliasCoverage" class="aliasCoverage"><span class="aliasDot"></span><span id="aliasCoverageText">0 / 0 materiais com apelido cadastrado</span></div><div class="classCoverage"><span>◆</span><span id="classCoverageText">0 / 0 materiais classificados</span></div><div class="searchRow"><input id="configSearch" class="phrase" placeholder="Filtrar por código, descrição, nome de voz ou apelido..."/><select id="configUm" class="btn"><option value="">Todas as UM</option><option value="KG">KG</option><option value="UN">UN</option></select><button id="configClear" class="btn">Limpar filtro</button></div><div id="configFilterInfo" class="hint" style="margin-bottom:8px"></div><div id="configList" class="configList"></div></section>
         <section id="tab-days" class="hidden"><div class="hint" style="margin-bottom:8px">Dias iniciados e finalizados. Você pode baixar novamente o XLSX de qualquer dia.</div><div id="daysList" class="daysList"></div></section>
         <section id="tab-audit" class="hidden"><div class="hint" style="margin-bottom:8px">Registro completo de contagens e alterações, com usuário, data e hora.</div><div class="searchRow"><input id="auditSearch" class="phrase" placeholder="Filtrar por usuário, ação ou material..."/><button id="auditRefresh" class="btn">Atualizar</button></div><div id="auditList"></div></section>
         <section id="tab-users" class="hidden"><div class="hint" style="margin-bottom:8px">Somente o administrador pode criar e desativar acessos.</div><div class="card" style="box-shadow:none;margin-bottom:12px"><div class="kv"><b>Nome</b><input id="newUserName" class="phrase" placeholder="Nome da pessoa"><b>Usuário</b><input id="newUsername" class="phrase" placeholder="Ex.: joao.silva"><b>Senha inicial</b><input id="newUserPassword" type="password" class="phrase" placeholder="Mínimo 6 caracteres"><b>Perfil</b><select id="newUserRole" class="btn"><option value="user">Usuário</option><option value="admin">Administrador</option></select></div><div class="actions"><button id="createUserBtn" class="btn primary">+ Criar login</button></div><div id="createUserMsg" class="hint"></div></div><div id="usersList"></div></section>
@@ -288,7 +288,7 @@ async function finishMaterialEdit(mat){
     const factor=card.querySelector('[data-cfg="factor"]')?.value??'';
     const um=card.querySelector('[data-cfg="um"]')?.value??'KG';
     const material_type=card.querySelector('[data-cfg="material_type"]')?.value??'';
-    const production_line=card.querySelector('[data-cfg="production_line"]')?.value??'';
+    const production_line=[...card.querySelectorAll('[data-line]')].filter(x=>x.checked).map(x=>x.value).join(';');
     const product_name=card.querySelector('[data-cfg="product_name"]')?.value??'';
     const specification=card.querySelector('[data-cfg="specification"]')?.value??'';
     cfg[mat]={...getCfg(mat),aliases:alias,factor:factor,um,material_type,production_line,product_name,specification};saveCfg();
@@ -421,6 +421,10 @@ function spokenNorm(s){
   // Converte números falados simples/compostos: "oitenta e cinco" -> 85.
   s=numberWordsToDigits(s).toLowerCase();
   s=s.replace(/(\d+)\s*(?:virgula|ponto)\s*(\d+)/g,'$1.$2');
+  // Termos industriais em inglês e transcrições comuns do reconhecimento pt-BR.
+  s=s.replace(/\bcold\s+(?:blue|bru|brui|brew)\b/g,'cold brew');
+  s=s.replace(/\bice\s+(?:tea|ti|t)\b/g,'ice tea');
+  s=s.replace(/\bbi\s*pack\b|\bby\s*pack\b|\bbai\s*pack\b/g,'bipack');
   s=s.replace(/\bquilos?\b|\bquilogramas?\b|\bkgs?\b/g,'kg');
   s=s.replace(/\bunidades?\b/g,'un');
   s=s.replace(/\bvezes\b|\bmultiplicad[oa]\s+por\b|\bmultiplica\s+por\b/g,' x ');
@@ -429,12 +433,15 @@ function spokenNorm(s){
   return s;
 }
 function voiceName(m){return cleanSapCodes(m.descricao)}
-const TYPE_OPTIONS=['','Caixinha','Etiqueta','Tag','Envelope','Blend','Papel filtro','Filme','Aroma','Cola/Adesivo','Fio','Fita','Erva','Outro'];
-const LINE_OPTIONS=['','Optima','EC24','TeaBag','Granel 100','Granel 250','TV','TV2','ACMA','Ervas','Termo','Aroma','Outra'];
-function detectLine(text){const n=normText(text);if(/\bOPT(?:IMA)?\b/.test(n))return 'Optima';if(/\bEC\s*24\b|\bEC24\b/.test(n))return 'EC24';if(/\bTEA\s*BAG\b|\bTEABAG\b/.test(n))return 'TeaBag';if(/\bGRANEL\s*100\b/.test(n))return 'Granel 100';if(/\bGRANEL\s*250\b/.test(n))return 'Granel 250';if(/\bTV2\b/.test(n))return 'TV2';if(/\bTV\b/.test(n))return 'TV';if(/\bACMA\b/.test(n))return 'ACMA';if(/\bERVAS?\b/.test(n))return 'Ervas';if(/\bTERMO\b/.test(n))return 'Termo';if(/\bAROMA\b/.test(n))return 'Aroma';return ''}
+const TYPE_OPTIONS=['','Caixinha','Caixa Master','Etiqueta','Tag','Envelope','Blend','Papel filtro','Filme','Aroma','Cola/Adesivo','Fio','Fita','Erva','Outro'];
+const LINE_OPTIONS=['Optima','EC24','TeaBag','Granel 100','Granel 250','TV','TV2','ACMA','Ervas','Termo','Aromatização','Outra'];
+function detectLine(text){const n=normText(text);if(/\bOPT(?:IMA)?\b/.test(n))return 'Optima';if(/\bEC\s*24\b|\bEC24\b/.test(n))return 'EC24';if(/\bTEA\s*BAG\b|\bTEABAG\b/.test(n))return 'TeaBag';if(/\bGRANEL\s*100\b/.test(n))return 'Granel 100';if(/\bGRANEL\s*250\b/.test(n))return 'Granel 250';if(/\bTV2\b/.test(n))return 'TV2';if(/\bTV\b/.test(n))return 'TV';if(/\bACMA\b/.test(n))return 'ACMA';if(/\bERVAS?\b/.test(n))return 'Ervas';if(/\bTERMO\b/.test(n))return 'Termo';if(/\bAROMATIZACAO\b|\bAROMA\b/.test(n))return 'Aromatização';return ''}
 function familyToType(f){return ({CAIXINHA:'Caixinha',BLEND:'Blend',ENVELOPE:'Envelope',ETIQUETA:'Etiqueta',FILME:'Filme',AROMA:'Aroma',PAPEL_FILTRO:'Papel filtro',ADESIVO_COLA:'Cola/Adesivo',TAG:'Tag',FIO:'Fio',FITA:'Fita',ERVA:'Erva'})[f]||''}
 function detectType(text){return familyToType(detectFamily(text))}
-function getCfg(mat){const m=MATERIALS.find(x=>x.material===mat);const c=cfg[mat]||{};return {aliases:c.aliases||'',factor:c.factor||'',um:c.um||m?.um_sugerida||'KG',material_type:c.material_type||'',production_line:c.production_line||'',product_name:c.product_name||'',specification:c.specification||''}}
+function normalizeLineValue(v){return String(v||'').split(';').map(x=>x.trim()).filter(Boolean).map(x=>x==='Aroma'?'Aromatização':x).filter((x,i,a)=>a.indexOf(x)===i).join(';')}
+function lineList(v){return normalizeLineValue(v).split(';').filter(Boolean)}
+function lineHas(v,line){return !!line && lineList(v).includes(line)}
+function getCfg(mat){const m=MATERIALS.find(x=>x.material===mat);const c=cfg[mat]||{};return {aliases:c.aliases||'',factor:c.factor||'',um:c.um||m?.um_sugerida||'KG',material_type:c.material_type||'',production_line:normalizeLineValue(c.production_line||''),product_name:c.product_name||'',specification:c.specification||''}}
 function saveCfg(){localStorage.setItem(CONFIG,JSON.stringify(cfg))}
 const TOKEN_EQUIV={
   CAIX:'CAIXA',CAIXI:'CAIXA',CAIXIN:'CAIXA',CAIXINH:'CAIXA',CAIXINHA:'CAIXA',CAIXA:'CAIXA',
@@ -452,7 +459,7 @@ const TOKEN_EQUIV={
   TERMOCONTRATIL:'TERMOCONTRATIL',TERMOCONTRATIL:'TERMOCONTRATIL',
   AD:'ADESIVA',ADES:'ADESIVA',ADESIVA:'ADESIVA',
   OPT:'OPTIMA',OPTIMA:'OPTIMA',
-  CHA:'CHA',CHÁ:'CHA'
+  CHA:'CHA',CHÁ:'CHA',COLD:'COLD',BREW:'BREW',BLUE:'BREW',ICE:'ICE',TEA:'TEA',TI:'TEA',BIPACK:'BIPACK',BIPAC:'BIPACK',BIPAK:'BIPACK'
 };
 const STOP_TOKENS=new Set(['DE','DA','DO','DAS','DOS','E','PARA','COM','EM','CADA','CAIXAS','CAIXA','QUILO','QUILOS','KG','UN','UNIDADE','UNIDADES','VEZES','X','POR']);
 function canonicalToken(t){return TOKEN_EQUIV[t]||t}
@@ -530,7 +537,7 @@ function findMatches(phrase){
 
     // Quando o cadastro estruturado existe, divergências fortes eliminam falsos positivos.
     if(spokenType && configuredType && spokenType!==configuredType) continue;
-    if(spokenLine && configuredLine && spokenLine!==configuredLine) continue;
+    if(spokenLine && configuredLine && !lineHas(configuredLine,spokenLine)) continue;
 
     let best=similarity(phrase,voiceName(m));
     let matchSource='base', exactAlias=false, exactCode=false;
@@ -546,9 +553,9 @@ function findMatches(phrase){
 
     // Classificação estruturada: tipo e linha valem mais que similaridade genérica.
     if(spokenType && materialType===spokenType) best+=configuredType?.24:.13;
-    if(spokenLine && materialLine===spokenLine) best+=configuredLine?.23:.12;
+    if(spokenLine && (configuredLine?lineHas(configuredLine,spokenLine):materialLine===spokenLine)) best+=configuredLine?.23:.12;
     if(spokenType && materialType && spokenType!==materialType) best-=.20;
-    if(spokenLine && materialLine && spokenLine!==materialLine) best-=.18;
+    if(spokenLine && materialLine && !(configuredLine?lineHas(configuredLine,spokenLine):spokenLine===materialLine)) best-=.18;
 
     const product=String(c.product_name||'').trim();
     const spec=String(c.specification||'').trim();
@@ -706,20 +713,20 @@ function renderConfig(){
     return (!q||hay.includes(q)||tokens(q).every(qt=>tokens(hay).some(ht=>tokenSimilar(qt,ht)>=.76))) && (!um||(c.um||m.um_sugerida).toUpperCase()===um);
   });
   const aliasCount=MATERIALS.filter(m=>String(getCfg(m.material).aliases||'').trim().length>0).length;
-  const classCount=MATERIALS.filter(m=>{const c=getCfg(m.material);return !!(c.material_type&&c.production_line)}).length;
+  const classCount=MATERIALS.filter(m=>{const c=getCfg(m.material);return !!(c.material_type&&lineList(c.production_line).length)}).length;
   const coverage=document.getElementById('aliasCoverageText');if(coverage)coverage.textContent=`${aliasCount} / ${MATERIALS.length} materiais com apelido cadastrado`;
-  const cc=document.getElementById('classCoverageText');if(cc)cc.textContent=`${classCount} / ${MATERIALS.length} materiais classificados (Tipo + Linha)`;
+  const cc=document.getElementById('classCoverageText');if(cc)cc.textContent=`${classCount} / ${MATERIALS.length} materiais classificados (Tipo + Linha(s))`;
   const info=document.getElementById('configFilterInfo');if(info)info.textContent=`Exibindo ${filtered.length} de ${MATERIALS.length} materiais. Verde = apelido cadastrado; faixa azul = Tipo e Linha classificados.`;
   const opts=(arr,val)=>arr.map(x=>`<option value="${x}" ${x===val?'selected':''}>${x||'— selecionar —'}</option>`).join('');
   const esc=v=>String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
   el.innerHTML=filtered.map(m=>{
-    const c=getCfg(m.material),hasAlias=String(c.aliases||'').trim().length>0,isClassified=!!(c.material_type&&c.production_line),lk=lockFor(m.material),mine=lockIsMine(m.material),other=!!(lk&&!mine),editing=editingMaterial===m.material&&mine;
+    const c=getCfg(m.material),hasAlias=String(c.aliases||'').trim().length>0,isClassified=!!(c.material_type&&lineList(c.production_line).length),lk=lockFor(m.material),mine=lockIsMine(m.material),other=!!(lk&&!mine),editing=editingMaterial===m.material&&mine;
     const disabled=editing?'':'disabled';
     const cls=(hasAlias?' hasAlias':'')+(isClassified?' isClassified':'')+(editing?' editingMine':other?' lockedOther':'');
     const lockInfo=editing?'<span class="lockPill mine">● VOCÊ ESTÁ EDITANDO</span>':other?'<span class="lockPill other">🔒 EM EDIÇÃO EM OUTRO APARELHO</span>':'<span class="lockPill">○ DISPONÍVEL</span>';
     const action=editing?`<button class="btn primary" onclick="finishMaterialEdit('${m.material}')">✓ Concluir edição</button>`:other?`<button class="btn" disabled>Bloqueado</button>`:`<button class="btn" onclick="acquireMaterialLock('${m.material}')">✎ Editar este material</button>`;
-    const sugType=c.material_type||detectType(m.descricao),sugLine=c.production_line||detectLine(m.descricao);
-    return `<div class="config${cls}" data-lock-mat="${m.material}"><div><b>${m.material}</b> — ${m.descricao}</div><div class="sub">Nome base: ${voiceName(m)}${hasAlias?' <span class="aliasStatus">• APELIDO CADASTRADO</span>':''}${isClassified?' <span class="classStatus">◆ CLASSIFICADO</span>':''}</div><div class="inputs"><input data-cfg="aliases" value="${esc(c.aliases)}" placeholder="apelidos; separados; por ;" ${disabled}><input data-cfg="factor" value="${esc(c.factor)}" placeholder="fator" inputmode="decimal" ${disabled}><select data-cfg="um" ${disabled}><option ${c.um==='KG'?'selected':''}>KG</option><option ${c.um==='UN'?'selected':''}>UN</option></select></div><div class="classInputs"><select data-cfg="material_type" ${disabled}>${opts(TYPE_OPTIONS,c.material_type||'')}</select><select data-cfg="production_line" ${disabled}>${opts(LINE_OPTIONS,c.production_line||'')}</select><input data-cfg="product_name" value="${esc(c.product_name)}" placeholder="Produto / sabor (ex.: Camomila)" ${disabled}><input data-cfg="specification" value="${esc(c.specification)}" placeholder="Especificação (ex.: 15x36, 10UN)" ${disabled}></div>${editing&&(!c.material_type||!c.production_line)&&(sugType||sugLine)?`<div class="hint">Sugestão pela descrição: ${sugType?`Tipo <b>${sugType}</b>`:''}${sugType&&sugLine?' • ':''}${sugLine?`Linha <b>${sugLine}</b>`:''}. Se estiver correto, selecione nos campos acima.</div>`:''}<div class="editLockRow">${lockInfo}${action}</div></div>`;
+    const sugType=c.material_type||detectType(m.descricao),sugLine=lineList(c.production_line)[0]||detectLine(m.descricao);const selectedLines=lineList(c.production_line);const lineChecks=`<div class="lineMulti${disabled?' disabled':''}">${LINE_OPTIONS.map(x=>`<label class="lineChip"><input type="checkbox" data-line value="${x}" ${selectedLines.includes(x)?'checked':''} ${disabled}>${x}</label>`).join('')}</div>`;
+    return `<div class="config${cls}" data-lock-mat="${m.material}"><div><b>${m.material}</b> — ${m.descricao}</div><div class="sub">Nome base: ${voiceName(m)}${hasAlias?' <span class="aliasStatus">• APELIDO CADASTRADO</span>':''}${isClassified?' <span class="classStatus">◆ CLASSIFICADO</span>':''}</div><div class="inputs"><input data-cfg="aliases" value="${esc(c.aliases)}" placeholder="apelidos; separados; por ;" ${disabled}><input data-cfg="factor" value="${esc(c.factor)}" placeholder="fator" inputmode="decimal" ${disabled}><select data-cfg="um" ${disabled}><option ${c.um==='KG'?'selected':''}>KG</option><option ${c.um==='UN'?'selected':''}>UN</option></select></div><div class="classInputs"><select data-cfg="material_type" ${disabled}>${opts(TYPE_OPTIONS,c.material_type||'')}</select>${lineChecks}<input data-cfg="product_name" value="${esc(c.product_name)}" placeholder="Produto / sabor (ex.: Camomila)" ${disabled}><input data-cfg="specification" value="${esc(c.specification)}" placeholder="Especificação (ex.: 15x36, 10UN)" ${disabled}></div>${editing&&(!c.material_type||!c.production_line)&&(sugType||sugLine)?`<div class="hint">Sugestão pela descrição: ${sugType?`Tipo <b>${sugType}</b>`:''}${sugType&&sugLine?' • ':''}${sugLine?`Linha <b>${sugLine}</b>`:''}. Se estiver correto, selecione nos campos acima.</div>`:''}<div class="editLockRow">${lockInfo}${action}</div></div>`;
   }).join('') || '<div class="hint">Nenhum material encontrado para este filtro.</div>';
 }
 async function updateCfg(mat,key,val){
