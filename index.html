@@ -124,7 +124,7 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 <body>
 <div id="loginOverlay" class="loginOverlay"><div class="loginCard"><h2>Contagem por Voz</h2><div class="hint">Entre com seu usuário e senha.</div><input id="loginUsername" class="phrase" autocomplete="username" placeholder="Usuário"><input id="loginPassword" type="password" class="phrase" autocomplete="current-password" placeholder="Senha"><div class="actions"><button id="loginBtn" class="btn primary" style="width:100%">Entrar</button></div><div id="loginError" class="loginError"></div></div></div>
 <div class="wrap">
-  <div class="top"><div><h1>Contagem por Voz — Mobile v21</h1><p>Contagem diária compartilhada em nuvem com login, identificação de usuários e auditoria.</p><div class="userBar"><span id="currentUserChip" class="userChip">Não autenticado</span><button id="logoutBtn" class="btn hidden">Sair</button></div></div><div><div class="badge" id="cloudBadge">SOMENTE LOCAL</div><div class="sub" id="cloudDetail" style="text-align:right;margin-top:4px">Supabase não configurado</div></div></div>
+  <div class="top"><div><h1>Contagem por Voz — Mobile v24</h1><p>Contagem diária compartilhada em nuvem com login, identificação de usuários e auditoria.</p><div class="userBar"><span id="currentUserChip" class="userChip">Não autenticado</span><button id="logoutBtn" class="btn hidden">Sair</button></div></div><div><div class="badge" id="cloudBadge">SOMENTE LOCAL</div><div class="sub" id="cloudDetail" style="text-align:right;margin-top:4px">Supabase não configurado</div></div></div>
 
   <div id="dayPanel" class="dayPanel">
     <div class="dayHead">
@@ -146,7 +146,7 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
           <input id="phrase" class="phrase" placeholder='Ex.: "caixinha camomila optima 85 caixas vezes 700"' />
           <button id="interpretBtn" class="btn primary">Interpretar</button>
         </div>
-        <div class="hint">Também aceita: “85 por 700”, “85 caixas com 700 em cada”, “25 unidades vezes 8,2 kg” e entradas simples como “cola pva 2,5 quilos”. O reconhecimento agora prioriza palavras-chave de família (caixinha, blend, envelope, etiqueta, filme, aroma, papel filtro, cola/adesivo etc.), além de tolerar abreviações, pequenas diferenças de pronúncia/transcrição e números falados por extenso. <b>Toque em “Iniciar voz”, fale normalmente e toque em “Encerrar voz”. O aplicativo mostrará uma prévia para você revisar antes de salvar.</b></div>
+        <div class="hint">Também aceita: “85 por 700”, “85 caixas com 700 em cada”, “25 unidades vezes 8,2 kg”. Medidas do produto como “15 por 36”, “10 por 20” e “12 por 10” são usadas para identificar o material e não entram no cálculo e entradas simples como “cola pva 2,5 quilos”. O reconhecimento agora prioriza palavras-chave de família (caixinha, blend, envelope, etiqueta, filme, aroma, papel filtro, cola/adesivo etc.), além de tolerar abreviações, pequenas diferenças de pronúncia/transcrição e números falados por extenso. <b>Toque em “Iniciar voz”, fale normalmente e toque em “Encerrar voz”. O aplicativo mostrará uma prévia para você revisar antes de salvar.</b></div>
         <div id="voiceState" class="hint" aria-live="polite">Modo de voz: toque em <b>“Iniciar voz”</b>, fale o material e a quantidade e depois toque em <b>“Encerrar voz”</b>.</div>
         <div id="voiceDebug" class="hint" aria-live="polite"><b>Último reconhecimento:</b> —</div>
         <div id="voiceFeedback" class="voiceFeedback idle" aria-live="assertive">
@@ -548,12 +548,40 @@ function numsFromPhrase(s){
   const x=spokenNorm(s).replace(/(\d)\.(\d{3})(?=\D|$)/g,'$1$2');
   return [...x.matchAll(/\d+(?:[.,]\d+)?/g)].map(m=>({v:Number(m[0].replace(',','.')),i:m.index,raw:m[0]}));
 }
+function materialDimensionPairs(m){
+  const c=getCfg(m.material);
+  const sources=[voiceName(m),m.descricao,...String(c.aliases||'').split(';')].filter(Boolean);
+  const pairs=new Set();
+  for(const src of sources){
+    const t=spokenNorm(src);
+    for(const mt of t.matchAll(/(\d+(?:[.,]\d+)?)\s*(?:x|por)\s*(\d+(?:[.,]\d+)?)/g)){
+      const a=Number(mt[1].replace(',','.')),b=Number(mt[2].replace(',','.'));
+      if(Number.isFinite(a)&&Number.isFinite(b))pairs.add(`${a}x${b}`);
+    }
+  }
+  return pairs;
+}
+function stripKnownDimensions(phrase,m){
+  const pairs=materialDimensionPairs(m);
+  let s=spokenNorm(phrase);
+  if(!pairs.size)return s;
+  s=s.replace(/(\d+(?:[.,]\d+)?)\s*(?:x|por)\s*(\d+(?:[.,]\d+)?)/g,(full,aRaw,bRaw)=>{
+    const a=Number(String(aRaw).replace(',','.')),b=Number(String(bRaw).replace(',','.'));
+    return pairs.has(`${a}x${b}`)?' ':full;
+  });
+  return s.replace(/\s+/g,' ').trim();
+}
 function parseCalc(phrase,m){
-  const s=spokenNorm(phrase); const c=getCfg(m.material); const ns=numsFromPhrase(s);
+  const c=getCfg(m.material);
 
-  // Números explicitamente acompanhados de unidade falada têm prioridade como QUANTIDADE.
-  // Ex.: material cadastrado contém "10UN", mas a fala termina em "10 unidades".
-  // Nesse caso o 10 deve continuar disponível para a contagem, não ser removido como especificação.
+  // PRIMEIRO removemos dimensões que fazem parte da identidade do material.
+  // Ex.: "caixinha boa noite 15 por 36, 20 unidades" -> "caixinha boa noite 20 un".
+  // Assim 15x36 identifica o SKU e jamais vira 15*36 ou 36*20.
+  const s=stripKnownDimensions(phrase,m);
+  const ns=numsFromPhrase(s);
+
+  // Números isolados que aparecem no nome-base (100G, 250G etc.) continuam sendo tratados
+  // como especificação quando não estão explicitamente associados à quantidade/fator da contagem.
   const protectedIdx=new Set();
   for(let k=0;k<ns.length;k++){
     const n=ns[k];
@@ -561,9 +589,6 @@ function parseCalc(phrase,m){
     const head=s.slice(Math.max(0,n.i-18), n.i);
     if(/^\s*(?:un|kg)\b/.test(tail) || /(?:x|por)\s*$/.test(head) || /^\s*(?:x|por)\b/.test(tail)) protectedIdx.add(k);
   }
-
-  // Remove números que pertencem ao nome/especificação do material (100G, 30X10 etc.),
-  // mas NUNCA remove um número que foi explicitamente falado como quantidade/fator.
   const specNums=(voiceName(m).match(/\d+(?:[.,]\d+)?/g)||[]).map(x=>Number(x.replace(',','.')));
   let work=ns.map((n,idx)=>({...n,_idx:idx}));
   for(const spec of specNums){
@@ -572,6 +597,7 @@ function parseCalc(phrase,m){
   }
 
   let base=null,factor=null,usedDefault=false;
+  // Multiplicação só é considerada depois que as dimensões conhecidas do SKU já foram retiradas.
   const mult=/\b(?:x|por)\b|\bde\b/.test(s) || /em cada/.test(s);
   if(mult && work.length>=2){base=work[work.length-2].v;factor=work[work.length-1].v}
   else if(work.length>=1){base=work[work.length-1].v; if(c.factor!==''&&c.factor!=null){factor=Number(String(c.factor).replace(',','.'));usedDefault=true}}
