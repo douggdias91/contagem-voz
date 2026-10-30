@@ -127,7 +127,7 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 <body>
 <div id="loginOverlay" class="loginOverlay"><div class="loginCard"><h2>Contagem por Voz</h2><div class="hint">Entre com seu usuário e senha.</div><input id="loginUsername" class="phrase" autocomplete="username" placeholder="Usuário"><input id="loginPassword" type="password" class="phrase" autocomplete="current-password" placeholder="Senha"><div class="actions"><button id="loginBtn" class="btn primary" style="width:100%">Entrar</button></div><div id="loginError" class="loginError"></div></div></div>
 <div class="wrap">
-  <div class="top"><div><h1>Contagem por Voz — v30</h1><p>Contagem diária compartilhada em nuvem com login, identificação de usuários e auditoria.</p><div class="userBar"><span id="currentUserChip" class="userChip">Não autenticado</span><button id="logoutBtn" class="btn hidden">Sair</button></div></div><div><div class="badge" id="cloudBadge">SOMENTE LOCAL</div><div class="sub" id="cloudDetail" style="text-align:right;margin-top:4px">Supabase não configurado</div></div></div>
+  <div class="top"><div><h1>Contagem por Voz — v31</h1><p>Contagem diária compartilhada em nuvem com login, identificação de usuários e auditoria.</p><div class="userBar"><span id="currentUserChip" class="userChip">Não autenticado</span><button id="logoutBtn" class="btn hidden">Sair</button></div></div><div><div class="badge" id="cloudBadge">SOMENTE LOCAL</div><div class="sub" id="cloudDetail" style="text-align:right;margin-top:4px">Supabase não configurado</div></div></div>
 
   <div id="dayPanel" class="dayPanel">
     <div class="dayHead">
@@ -210,6 +210,10 @@ let cloudSyncing=false;
 let cloudSyncDeferred=false;
 let lastCloudSyncAt=0;
 function userIsEditing(){
+  // Considera edição ativa durante TODO o período em que um material está bloqueado
+  // por este aparelho, mesmo que nenhum input esteja momentaneamente com foco.
+  // Isso impede sincronizações/lock polling de redesenharem o cartão e apagarem rascunhos.
+  if(typeof editingMaterial!=='undefined' && editingMaterial) return true;
   const a=document.activeElement;
   if(!a)return false;
   return a.matches?.('input, textarea, select') || a.isContentEditable;
@@ -297,6 +301,7 @@ async function finishMaterialEdit(mat){
     await pushCfgCloud(mat);renderTotals();
   }
   await releaseMaterialLock(mat,true);toast('Edição concluída e material liberado.');
+  if(cloudEnabled){cloudSyncDeferred=false;setTimeout(()=>pullCloud(false),250);}
 }
 window.addEventListener('beforeunload',()=>{if(cloudEnabled&&editingMaterial){try{cloud.rpc('release_voice_material_lock',{p_workspace:CLOUD_WORKSPACE,p_material:editingMaterial,p_owner_id:EDITOR_ID})}catch(e){}}});
 
