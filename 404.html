@@ -593,6 +593,25 @@ function findMatches(phrase){
     if(product){const ps=similarity(phrase,product);if(ps>=.75)best+=.18*ps;else if(ps<.35)best-=.05}
     if(spec){const specN=normText(spec);if(specN && phraseNorm.includes(specN))best+=.22;else {const ss=similarity(phrase,spec);if(ss>=.8)best+=.16*ss}}
 
+    // Dimensões completas têm prioridade sobre correspondências parciais.
+    // Se a fala contém 6x2x10, um material 6x2x10 recebe forte bônus; um material apenas 2x10 é penalizado.
+    const spokenDims=extractDimensionSequences(phrase);
+    const materialDims=materialDimensionPairs(m);
+    if(spokenDims.length){
+      let exactDim=false, partialDim=false;
+      for(const sd of spokenDims){
+        if(materialDims.has(sd)){exactDim=true;break}
+        const sp=sd.split('x');
+        for(const md of materialDims){
+          const mp=md.split('x');
+          if(mp.length<sp.length && sp.slice(-mp.length).join('x')===md){partialDim=true}
+        }
+      }
+      if(exactDim){best+=.38;matchSource=matchSource==='base'?'dimensao':matchSource}
+      else if(partialDim) best-=.38;
+      else if(materialDims.size) best-=.10;
+    }
+
     if(new RegExp('(?:^|\\s)'+String(m.material).replace(/\\D/g,'')+'(?:\\s|$)').test(phraseNorm.replace(/\\D+/g,' '))){best=1;exactCode=true;matchSource='codigo'}
     out.push({m,score:Math.max(0,Math.min(1,best)),family:detectFamily(voiceName(m)),materialType,materialLine,matchSource,exactAlias,exactCode});
   }
@@ -602,26 +621,34 @@ function numsFromPhrase(s){
   const x=spokenNorm(s).replace(/(\d)\.(\d{3})(?=\D|$)/g,'$1$2');
   return [...x.matchAll(/\d+(?:[.,]\d+)?/g)].map(m=>({v:Number(m[0].replace(',','.')),i:m.index,raw:m[0]}));
 }
+function extractDimensionSequences(text){
+  const t=spokenNorm(text);
+  const out=[];
+  // Captura dimensões completas com 2 a 4 blocos: 2x10, 6x2x10, 10x20x30 etc.
+  const re=/\d+(?:[.,]\d+)?(?:\s*(?:x|por)\s*\d+(?:[.,]\d+)?){1,3}/g;
+  for(const mt of t.matchAll(re)){
+    const nums=(mt[0].match(/\d+(?:[.,]\d+)?/g)||[]).map(v=>Number(v.replace(',','.')));
+    if(nums.length>=2 && nums.every(Number.isFinite)) out.push(nums.join('x'));
+  }
+  return [...new Set(out)];
+}
 function materialDimensionPairs(m){
   const c=getCfg(m.material);
   const sources=[voiceName(m),m.descricao,c.specification,...String(c.aliases||'').split(';')].filter(Boolean);
-  const pairs=new Set();
-  for(const src of sources){
-    const t=spokenNorm(src);
-    for(const mt of t.matchAll(/(\d+(?:[.,]\d+)?)\s*(?:x|por)\s*(\d+(?:[.,]\d+)?)/g)){
-      const a=Number(mt[1].replace(',','.')),b=Number(mt[2].replace(',','.'));
-      if(Number.isFinite(a)&&Number.isFinite(b))pairs.add(`${a}x${b}`);
-    }
-  }
-  return pairs;
+  const dims=new Set();
+  for(const src of sources) for(const d of extractDimensionSequences(src)) dims.add(d);
+  return dims;
 }
 function stripKnownDimensions(phrase,m){
-  const pairs=materialDimensionPairs(m);
+  const known=materialDimensionPairs(m);
   let s=spokenNorm(phrase);
-  if(!pairs.size)return s;
-  s=s.replace(/(\d+(?:[.,]\d+)?)\s*(?:x|por)\s*(\d+(?:[.,]\d+)?)/g,(full,aRaw,bRaw)=>{
-    const a=Number(String(aRaw).replace(',','.')),b=Number(String(bRaw).replace(',','.'));
-    return pairs.has(`${a}x${b}`)?' ':full;
+  if(!known.size)return s;
+  // Remove a dimensão inteira somente quando ela existe integralmente no SKU selecionado.
+  // Ex.: 6 por 2 por 10 é removido como 6x2x10; nunca apenas como 2x10.
+  const re=/\d+(?:[.,]\d+)?(?:\s*(?:x|por)\s*\d+(?:[.,]\d+)?){1,3}/g;
+  s=s.replace(re,(full)=>{
+    const dims=extractDimensionSequences(full);
+    return dims.some(d=>known.has(d))?' ':full;
   });
   return s.replace(/\s+/g,' ').trim();
 }
