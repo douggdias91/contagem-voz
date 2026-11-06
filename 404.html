@@ -154,7 +154,6 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .manualFactorToggle{display:flex;align-items:center;gap:9px;margin-top:8px;padding:9px 10px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:13px;font-weight:800;color:var(--ink)}
 .manualFactorToggle input{width:20px;height:20px;accent-color:var(--green)}
 .manualFactorOff{opacity:.58;background:#f3f4f4!important}
-
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -189,7 +188,7 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
   </div>
 </div>
 <div class="wrap">
-  <div class="top"><div><h1>Contagem por Voz — v46</h1><p>Contagem diária compartilhada em nuvem com login, identificação de usuários e auditoria.</p><div class="userBar"><span id="currentUserChip" class="userChip">Não autenticado</span><button id="openHomeBtn" class="btn modeBtn hidden">⌂ Escolher modo</button><button id="logoutBtn" class="btn hidden">Sair</button></div></div><div><div class="badge" id="cloudBadge">SOMENTE LOCAL</div><div class="sub" id="cloudDetail" style="text-align:right;margin-top:4px">Supabase não configurado</div></div></div>
+  <div class="top"><div><h1>Contagem por Voz — v47</h1><p>Contagem diária compartilhada em nuvem com login, identificação de usuários e auditoria.</p><div class="userBar"><span id="currentUserChip" class="userChip">Não autenticado</span><button id="openHomeBtn" class="btn modeBtn hidden">⌂ Escolher modo</button><button id="logoutBtn" class="btn hidden">Sair</button></div></div><div><div class="badge" id="cloudBadge">SOMENTE LOCAL</div><div class="sub" id="cloudDetail" style="text-align:right;margin-top:4px">Supabase não configurado</div></div></div>
 
   <div id="dayPanel" class="dayPanel">
     <div class="dayHead">
@@ -483,11 +482,6 @@ function printMaterialsAliases(){
 .homeCard{width:min(980px,100%);background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:24px}
 .homeTop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px}.homeTop h2{margin:0;font-size:28px;line-height:1.1}.homeTop p{margin:8px 0 0;color:var(--muted);font-size:15px;line-height:1.45}.homeGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.homeChoice{border:1px solid #cfe0d6;border-radius:18px;background:linear-gradient(180deg,#fff,#f7fbf8);padding:20px;text-align:left;cursor:pointer;transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;box-shadow:0 2px 0 rgba(0,0,0,.02)}.homeChoice:hover{transform:translateY(-1px);border-color:#9bc8ad;box-shadow:0 10px 20px rgba(20,40,30,.08)}.homeChoiceIcon{font-size:34px;line-height:1}.homeChoiceTitle{margin-top:12px;font-size:24px;font-weight:900}.homeChoiceText{margin-top:8px;color:var(--muted);line-height:1.5;font-size:14px}.homeChoiceNote{margin-top:14px;display:inline-block;padding:7px 10px;border-radius:999px;background:#eef7f1;color:var(--green);font-size:12px;font-weight:800}.homeHelp{margin-top:14px;color:var(--muted);font-size:12px}.modeBtn{margin-top:8px}
 @media(max-width:760px){.homeOverlay{padding:12px}.homeCard{padding:18px;border-radius:18px}.homeTop{display:block}.homeTop h2{font-size:26px}.homeTop p{font-size:14px}.homeGrid{grid-template-columns:1fr}.homeChoice{padding:18px}.homeChoiceTitle{font-size:22px}.modeBtn{width:100%}}
-
-
-.manualFactorToggle{display:flex;align-items:center;gap:9px;margin-top:8px;padding:9px 10px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:13px;font-weight:800;color:var(--ink)}
-.manualFactorToggle input{width:20px;height:20px;accent-color:var(--green)}
-.manualFactorOff{opacity:.58;background:#f3f4f4!important}
 
 </style></head><body><div class="head"><div><h1>Lista de materiais e apelidos de voz</h1><div class="sub">Base do app Contagem por Voz - somente materiais ativos</div></div><div class="meta"><b>${withAlias}/${active.length}</b> materiais ativos com apelido<br>${inactive.length} inativos não incluídos<br>Atualizado em ${new Date().toLocaleString('pt-BR')}</div></div><div class="list">${lineHtml}</div><div class="footer"><span>Usuário: ${esc(currentProfile.full_name||currentProfile.username)}</span><span>Total impresso: ${active.length} materiais</span></div><script>window.onload=()=>setTimeout(()=>window.print(),250)<\/script></body></html>`);
   w.document.close();
@@ -1033,7 +1027,34 @@ function evalManualExpression(raw){
   }
   return {value:total,expression:pretty.join(' + '),isExpression:terms.length>1||txt.includes('*')};
 }
-function manualCalc(){if(!manualMaterial)return null;const c=getCfg(manualMaterial.material);const um=(c.um||manualMaterial.um_sugerida||'KG').toUpperCase();const qRaw=String(document.getElementById('manualQty')?.value||'');const qEval=evalManualExpression(qRaw);const useFactor=!!document.getElementById('manualUseFactor')?.checked;let ftxt=String(document.getElementById('manualFactor')?.value||'').trim();let usedDefault=false;let factor=null;if(useFactor){if(ftxt!==''){const fEval=evalManualExpression(ftxt);factor=fEval?.value??NaN}else if(c.factor!==''&&c.factor!=null){factor=Number(String(c.factor).replace(',','.'));usedDefault=true}else{return {error:'Fator ativado. Informe um fator válido.'}}if(!qEval||!Number.isFinite(qEval.value)||qEval.value<=0)return {error:'Informe uma quantidade válida. Você pode usar soma e multiplicação, ex.: 82,5*3+8+8.'};const q=qEval.value;if(factor!==null&&(!Number.isFinite(factor)||factor<=0))return {error:'Informe um fator válido.'};let result=factor!==null?q*factor:q;if(um==='UN')result=Math.round(result);else result=Math.round(result*1000)/1000;return {base:q,baseExpression:qEval.expression,isExpression:qEval.isExpression,factor,usedDefault,um,result}}
+function manualCalc(){
+  if(!manualMaterial)return null;
+  const c=getCfg(manualMaterial.material);
+  const um=(c.um||manualMaterial.um_sugerida||'KG').toUpperCase();
+  const qRaw=String(document.getElementById('manualQty')?.value||'');
+  const qEval=evalManualExpression(qRaw);
+  const useFactor=!!document.getElementById('manualUseFactor')?.checked;
+  let ftxt=String(document.getElementById('manualFactor')?.value||'').trim();
+  let usedDefault=false;
+  let factor=null;
+  if(useFactor){
+    if(ftxt!==''){
+      const fEval=evalManualExpression(ftxt);
+      factor=fEval?.value??NaN;
+    }else if(c.factor!==''&&c.factor!=null){
+      factor=Number(String(c.factor).replace(',','.'));
+      usedDefault=true;
+    }else{
+      return {error:'Fator ativado. Informe um fator válido.'};
+    }
+  }
+  if(!qEval||!Number.isFinite(qEval.value)||qEval.value<=0)return {error:'Informe uma quantidade válida. Você pode usar soma e multiplicação, ex.: 82,5*3+8+8.'};
+  const q=qEval.value;
+  if(factor!==null&&(!Number.isFinite(factor)||factor<=0))return {error:'Informe um fator válido.'};
+  let result=factor!==null?q*factor:q;
+  if(um==='UN')result=Math.round(result);else result=Math.round(result*1000)/1000;
+  return {base:q,baseExpression:qEval.expression,isExpression:qEval.isExpression,factor,usedDefault,um,result};
+}
 function updateManualCalc(){const calc=manualCalc();const el=document.getElementById('manualCalcValue');const info=document.getElementById('manualCalcInfo');if(!el)return;if(!calc||calc.error){el.textContent='—';if(info)info.textContent=calc?.error||'';return}el.textContent=`${fmt(calc.result,calc.um)} ${calc.um}`;if(info){const baseTxt=calc.isExpression?`${calc.baseExpression} = ${fmt(calc.base,calc.um)}`:`${fmt(calc.base,calc.um)}`;info.textContent=calc.factor===null?`Quantidade: ${baseTxt}`:`${baseTxt} × ${fmt(calc.factor,'KG')}${calc.usedDefault?' (fator padrão)':''}`}}
 function renderManualSelected(){
   const box=document.getElementById('manualSelected');if(!box)return;
@@ -1047,7 +1068,18 @@ function renderManualSelected(){
   q?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveManualCount(false)}});
   f?.addEventListener('input',updateManualCalc);
   f?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveManualCount(false)}});
-  use?.addEventListener('change',()=>{const on=!!use.checked;if(f){f.disabled=!on;f.classList.toggle('manualFactorOff',!on);if(!on)f.value='';else if(c.factor!==''&&c.factor!=null)f.placeholder='Padrão: '+c.factor;else f.placeholder='Informe o fator';if(on)setTimeout(()=>f.focus(),20)}updateManualCalc()});
+  use?.addEventListener('change',()=>{
+    const on=!!use.checked;
+    if(f){
+      f.disabled=!on;
+      f.classList.toggle('manualFactorOff',!on);
+      if(!on)f.value='';
+      else if(c.factor!==''&&c.factor!=null)f.placeholder='Padrão: '+c.factor;
+      else f.placeholder='Informe o fator';
+      if(on)setTimeout(()=>f.focus(),20);
+    }
+    updateManualCalc();
+  });
   updateManualCalc();
 }
 async function saveManualCount(next=false){
