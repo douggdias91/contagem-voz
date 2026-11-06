@@ -445,7 +445,56 @@ function updateAuthUI(){
   document.getElementById('logoutBtn')?.classList.toggle('hidden',!logged);document.getElementById('openHomeBtn')?.classList.toggle('hidden',!logged);
   document.querySelectorAll('.adminOnly').forEach(x=>x.classList.toggle('hidden',!isAdmin()));
 }
-async function loginUser(){const u=document.getElementById('loginUsername').value.trim(),pw=document.getElementById('loginPassword').value;const errEl=document.getElementById('loginError');errEl.textContent='';if(!u||!pw){errEl.textContent='Informe usuário e senha.';return}try{const {data,error}=await cloud.auth.signInWithPassword({email:loginEmail(u),password:pw});if(error)throw error;currentUser=data.user;await loadProfile();if(!currentProfile||currentProfile.active===false){await cloud.auth.signOut();throw new Error('Usuário inativo ou sem perfil cadastrado.')}updateAuthUI();EDITOR_ID=currentUser.id;await pullCloud(true);await loadMaterialLocks(true);if(isAdmin()){await loadAudit();await loadUsers()}toast(`Bem-vindo, ${currentProfile.full_name}.`);maybeShowHomeScreen(true)}catch(e){errEl.textContent='Usuário ou senha inválidos, ou acesso inativo.';console.warn(e)}}
+async function loginUser(){
+  const u=document.getElementById('loginUsername').value.trim();
+  const pw=document.getElementById('loginPassword').value;
+  const errEl=document.getElementById('loginError');
+  errEl.textContent='';
+  if(!u||!pw){errEl.textContent='Informe usuário e senha.';return}
+  if(!cloud||!cloudEnabled){errEl.textContent='Não foi possível conectar ao Supabase. Atualize a página e tente novamente.';return}
+  const email=u.includes('@')?u.trim().toLowerCase():loginEmail(u);
+  let data;
+  try{
+    const res=await cloud.auth.signInWithPassword({email,password:pw});
+    if(res.error)throw res.error;
+    data=res.data;
+  }catch(e){
+    console.warn('Falha de autenticação:',e);
+    const msg=String(e?.message||'').toLowerCase();
+    if(msg.includes('invalid login credentials')||msg.includes('invalid credentials')) errEl.textContent='Usuário ou senha inválidos.';
+    else if(msg.includes('email not confirmed')) errEl.textContent='Este usuário ainda não está confirmado no Supabase.';
+    else errEl.textContent='Falha ao autenticar no Supabase. Tente novamente.';
+    return;
+  }
+  currentUser=data?.user||null;
+  if(!currentUser){errEl.textContent='O Supabase não retornou o usuário autenticado.';return}
+  try{
+    await loadProfile();
+  }catch(e){
+    console.warn('Falha ao carregar perfil:',e);
+    errEl.textContent='Login aceito, mas não foi possível carregar o perfil do app.';
+    return;
+  }
+  if(!currentProfile){
+    errEl.textContent='Login aceito, mas este usuário não possui perfil em voice_profiles.';
+    return;
+  }
+  if(currentProfile.active===false){
+    errEl.textContent='Login aceito, mas este acesso está inativo.';
+    return;
+  }
+  updateAuthUI();
+  EDITOR_ID=currentUser.id;
+  toast(`Bem-vindo, ${currentProfile.full_name}.`);
+  maybeShowHomeScreen(true);
+  // Abertura do app não depende da sincronização completa. Se alguma consulta falhar, o login continua válido.
+  try{await pullCloud(true)}catch(e){console.warn('Falha pós-login em pullCloud:',e)}
+  try{await loadMaterialLocks(true)}catch(e){console.warn('Falha pós-login em locks:',e)}
+  if(isAdmin()){
+    try{await loadAudit()}catch(e){console.warn('Falha pós-login em auditoria:',e)}
+    try{await loadUsers()}catch(e){console.warn('Falha pós-login em usuários:',e)}
+  }
+}
 async function logoutUser(){try{if(editingMaterial)await releaseMaterialLock(editingMaterial,false);await cloud.auth.signOut()}catch(e){}currentUser=null;currentProfile=null;entries=[];days=[];auditRows=[];userRows=[];homeShownThisSession=false;closeHomeScreen();updateAuthUI();renderAll()}
 async function logAudit(action,entityType,entityId,details={}){if(!cloudEnabled||!currentUser)return;const a=actor();try{await cloud.from('voice_audit_log').insert({workspace:CLOUD_WORKSPACE,user_id:a.id,user_name:a.name,username:a.username,action,entity_type:entityType,entity_id:String(entityId||''),details})}catch(e){console.warn('Audit:',e)}}
 async function loadAudit(){if(!isAdmin())return;try{const {data,error}=await cloud.from('voice_audit_log').select('*').eq('workspace',CLOUD_WORKSPACE).order('created_at',{ascending:false}).limit(500);if(error)throw error;auditRows=data||[];renderAudit()}catch(e){console.warn(e)}}
