@@ -141,6 +141,20 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .manualScreen.manual-entry .manualScreenSub{display:none}
 .manualScreen.manual-entry .manualScreenTitle:after{content:" - Lançamento"}
 @media(max-width:720px){.manualScreenHeader{padding:10px 12px}.manualScreenBody{padding:10px 10px 28px}.manualScreenTitle{font-size:19px}.manualScreen .manualSearchBox{top:66px}.manualScreen .manualFields{grid-template-columns:1fr 1fr}.manualScreen .manualActions{grid-template-columns:1fr}.manualScreen .manualActions .btn{width:100%;min-height:58px}.manualScreen .manualSelectedHead .btn{width:100%;margin-top:10px}.manualLaunch{width:100%;justify-content:center}}
+
+
+/* v45 - home selector for voice/manual modes */
+.homeOverlay{position:fixed;inset:0;z-index:9500;background:rgba(244,247,245,.98);display:flex;align-items:center;justify-content:center;padding:18px}
+.homeOverlay.hidden{display:none!important}
+.homeCard{width:min(980px,100%);background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:24px}
+.homeTop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px}.homeTop h2{margin:0;font-size:28px;line-height:1.1}.homeTop p{margin:8px 0 0;color:var(--muted);font-size:15px;line-height:1.45}.homeGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.homeChoice{border:1px solid #cfe0d6;border-radius:18px;background:linear-gradient(180deg,#fff,#f7fbf8);padding:20px;text-align:left;cursor:pointer;transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;box-shadow:0 2px 0 rgba(0,0,0,.02)}.homeChoice:hover{transform:translateY(-1px);border-color:#9bc8ad;box-shadow:0 10px 20px rgba(20,40,30,.08)}.homeChoiceIcon{font-size:34px;line-height:1}.homeChoiceTitle{margin-top:12px;font-size:24px;font-weight:900}.homeChoiceText{margin-top:8px;color:var(--muted);line-height:1.5;font-size:14px}.homeChoiceNote{margin-top:14px;display:inline-block;padding:7px 10px;border-radius:999px;background:#eef7f1;color:var(--green);font-size:12px;font-weight:800}.homeHelp{margin-top:14px;color:var(--muted);font-size:12px}.modeBtn{margin-top:8px}
+@media(max-width:760px){.homeOverlay{padding:12px}.homeCard{padding:18px;border-radius:18px}.homeTop{display:block}.homeTop h2{font-size:26px}.homeTop p{font-size:14px}.homeGrid{grid-template-columns:1fr}.homeChoice{padding:18px}.homeChoiceTitle{font-size:22px}.modeBtn{width:100%}}
+
+
+.manualFactorToggle{display:flex;align-items:center;gap:9px;margin-top:8px;padding:9px 10px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:13px;font-weight:800;color:var(--ink)}
+.manualFactorToggle input{width:20px;height:20px;accent-color:var(--green)}
+.manualFactorOff{opacity:.58;background:#f3f4f4!important}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -148,8 +162,34 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 </head>
 <body>
 <div id="loginOverlay" class="loginOverlay"><div class="loginCard"><h2>Contagem por Voz</h2><div class="hint">Entre com seu usuário e senha.</div><input id="loginUsername" class="phrase" autocomplete="username" placeholder="Usuário"><input id="loginPassword" type="password" class="phrase" autocomplete="current-password" placeholder="Senha"><div class="actions"><button id="loginBtn" class="btn primary" style="width:100%">Entrar</button></div><div id="loginError" class="loginError"></div></div></div>
+<div id="homeOverlay" class="homeOverlay hidden" aria-hidden="true">
+  <div class="homeCard">
+    <div class="homeTop">
+      <div>
+        <h2>Como deseja contar?</h2>
+        <p>Escolha o modo de trabalho. A <b>contagem por voz</b> é ideal para lançamentos falados. A <b>contagem manual</b> abre a tela focada no mobile para buscas rápidas e lançamentos ágeis.</p>
+      </div>
+      <button id="closeHomeBtn" class="btn">Fechar</button>
+    </div>
+    <div class="homeGrid">
+      <button id="goVoiceModeBtn" class="homeChoice" type="button">
+        <div class="homeChoiceIcon">🎙</div>
+        <div class="homeChoiceTitle">Contagem por voz</div>
+        <div class="homeChoiceText">Abre o fluxo para falar a contagem, revisar a prévia e salvar. Indicado para operação com as mãos ocupadas e maior velocidade no reconhecimento.</div>
+        <span class="homeChoiceNote">Modo guiado por reconhecimento</span>
+      </button>
+      <button id="goManualModeBtn" class="homeChoice" type="button">
+        <div class="homeChoiceIcon">⌨️</div>
+        <div class="homeChoiceTitle">Contagem manual</div>
+        <div class="homeChoiceText">Abre a busca de material e a tela de lançamento em tela cheia, otimizada para celular, com entrada rápida por quantidade, fator e expressões como soma e multiplicação.</div>
+        <span class="homeChoiceNote">Modo focado para mobile</span>
+      </button>
+    </div>
+    <div class="homeHelp">Dica: você pode trocar de modo novamente pelo botão <b>Escolher modo</b> no topo do aplicativo.</div>
+  </div>
+</div>
 <div class="wrap">
-  <div class="top"><div><h1>Contagem por Voz — v31</h1><p>Contagem diária compartilhada em nuvem com login, identificação de usuários e auditoria.</p><div class="userBar"><span id="currentUserChip" class="userChip">Não autenticado</span><button id="logoutBtn" class="btn hidden">Sair</button></div></div><div><div class="badge" id="cloudBadge">SOMENTE LOCAL</div><div class="sub" id="cloudDetail" style="text-align:right;margin-top:4px">Supabase não configurado</div></div></div>
+  <div class="top"><div><h1>Contagem por Voz — v46</h1><p>Contagem diária compartilhada em nuvem com login, identificação de usuários e auditoria.</p><div class="userBar"><span id="currentUserChip" class="userChip">Não autenticado</span><button id="openHomeBtn" class="btn modeBtn hidden">⌂ Escolher modo</button><button id="logoutBtn" class="btn hidden">Sair</button></div></div><div><div class="badge" id="cloudBadge">SOMENTE LOCAL</div><div class="sub" id="cloudDetail" style="text-align:right;margin-top:4px">Supabase não configurado</div></div></div>
 
   <div id="dayPanel" class="dayPanel">
     <div class="dayHead">
@@ -403,11 +443,11 @@ async function loadProfile(){
 function updateAuthUI(){
   const logged=!!currentUser&&!!currentProfile;document.getElementById('loginOverlay')?.classList.toggle('hidden',logged);
   const chip=document.getElementById('currentUserChip');if(chip)chip.textContent=logged?`${currentProfile.full_name} • ${currentProfile.role==='admin'?'Administrador':currentProfile.username}`:'Não autenticado';
-  document.getElementById('logoutBtn')?.classList.toggle('hidden',!logged);
+  document.getElementById('logoutBtn')?.classList.toggle('hidden',!logged);document.getElementById('openHomeBtn')?.classList.toggle('hidden',!logged);
   document.querySelectorAll('.adminOnly').forEach(x=>x.classList.toggle('hidden',!isAdmin()));
 }
-async function loginUser(){const u=document.getElementById('loginUsername').value.trim(),pw=document.getElementById('loginPassword').value;const errEl=document.getElementById('loginError');errEl.textContent='';if(!u||!pw){errEl.textContent='Informe usuário e senha.';return}try{const {data,error}=await cloud.auth.signInWithPassword({email:loginEmail(u),password:pw});if(error)throw error;currentUser=data.user;await loadProfile();if(!currentProfile||currentProfile.active===false){await cloud.auth.signOut();throw new Error('Usuário inativo ou sem perfil cadastrado.')}updateAuthUI();EDITOR_ID=currentUser.id;await pullCloud(true);await loadMaterialLocks(true);if(isAdmin()){await loadAudit();await loadUsers()}toast(`Bem-vindo, ${currentProfile.full_name}.`)}catch(e){errEl.textContent='Usuário ou senha inválidos, ou acesso inativo.';console.warn(e)}}
-async function logoutUser(){try{if(editingMaterial)await releaseMaterialLock(editingMaterial,false);await cloud.auth.signOut()}catch(e){}currentUser=null;currentProfile=null;entries=[];days=[];auditRows=[];userRows=[];updateAuthUI();renderAll()}
+async function loginUser(){const u=document.getElementById('loginUsername').value.trim(),pw=document.getElementById('loginPassword').value;const errEl=document.getElementById('loginError');errEl.textContent='';if(!u||!pw){errEl.textContent='Informe usuário e senha.';return}try{const {data,error}=await cloud.auth.signInWithPassword({email:loginEmail(u),password:pw});if(error)throw error;currentUser=data.user;await loadProfile();if(!currentProfile||currentProfile.active===false){await cloud.auth.signOut();throw new Error('Usuário inativo ou sem perfil cadastrado.')}updateAuthUI();EDITOR_ID=currentUser.id;await pullCloud(true);await loadMaterialLocks(true);if(isAdmin()){await loadAudit();await loadUsers()}toast(`Bem-vindo, ${currentProfile.full_name}.`);maybeShowHomeScreen(true)}catch(e){errEl.textContent='Usuário ou senha inválidos, ou acesso inativo.';console.warn(e)}}
+async function logoutUser(){try{if(editingMaterial)await releaseMaterialLock(editingMaterial,false);await cloud.auth.signOut()}catch(e){}currentUser=null;currentProfile=null;entries=[];days=[];auditRows=[];userRows=[];homeShownThisSession=false;closeHomeScreen();updateAuthUI();renderAll()}
 async function logAudit(action,entityType,entityId,details={}){if(!cloudEnabled||!currentUser)return;const a=actor();try{await cloud.from('voice_audit_log').insert({workspace:CLOUD_WORKSPACE,user_id:a.id,user_name:a.name,username:a.username,action,entity_type:entityType,entity_id:String(entityId||''),details})}catch(e){console.warn('Audit:',e)}}
 async function loadAudit(){if(!isAdmin())return;try{const {data,error}=await cloud.from('voice_audit_log').select('*').eq('workspace',CLOUD_WORKSPACE).order('created_at',{ascending:false}).limit(500);if(error)throw error;auditRows=data||[];renderAudit()}catch(e){console.warn(e)}}
 function auditLabel(a){return ({count_create:'Contagem inserida',count_delete:'Contagem desfeita',material_config_update:'Cadastro de material alterado',day_start:'Dia iniciado',day_finish:'Dia finalizado',user_create:'Usuário criado',user_disable:'Usuário desativado',user_enable:'Usuário ativado'})[a]||a}
@@ -435,6 +475,20 @@ function printMaterialsAliases(){
     @media print{.noPrint{display:none!important}}
   
 .manualWrap{display:grid;gap:12px}.manualSearchBox{position:relative}.manualResults{display:grid;gap:7px;margin-top:8px;max-height:360px;overflow:auto}.manualResult{width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px 13px;cursor:pointer}.manualResult:hover,.manualResult:focus{border-color:#84c89a;background:#f1fbf4;outline:none}.manualResult .code{font-size:12px;color:var(--muted);font-weight:700}.manualResult .alias{font-size:12px;color:#176b36;margin-top:3px}.manualSelected{border:1px solid #a8d9b6;background:#f3fbf5;border-radius:16px;padding:14px}.manualSelectedHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.manualSelectedName{font-size:17px;font-weight:800;line-height:1.25}.manualAlias{font-size:12px;color:#176b36;margin-top:5px}.manualFields{display:grid;grid-template-columns:1.25fr 1fr .8fr;gap:10px;margin-top:12px}.manualFields label{display:grid;gap:5px;font-size:12px;color:var(--muted);font-weight:700}.manualFields input{width:100%;padding:13px;border:1px solid var(--line);border-radius:12px;font-size:18px;background:#fff}.manualResultCalc{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;padding:11px 13px;border-radius:12px;background:#fff;border:1px solid #dfe8e2}.manualResultCalc strong{font-size:24px;color:#116c35}.manualActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.manualHint{font-size:12px;color:var(--muted)}@media(max-width:720px){.manualFields{grid-template-columns:1fr 1fr}.manualFields label:last-child{grid-column:1/-1}.manualResult{padding:14px}.manualActions .btn{flex:1 1 160px;min-height:48px}.manualSelectedHead{display:block}.manualSelectedHead .btn{margin-top:8px}}
+
+
+/* v45 - home selector for voice/manual modes */
+.homeOverlay{position:fixed;inset:0;z-index:9500;background:rgba(244,247,245,.98);display:flex;align-items:center;justify-content:center;padding:18px}
+.homeOverlay.hidden{display:none!important}
+.homeCard{width:min(980px,100%);background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:24px}
+.homeTop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px}.homeTop h2{margin:0;font-size:28px;line-height:1.1}.homeTop p{margin:8px 0 0;color:var(--muted);font-size:15px;line-height:1.45}.homeGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.homeChoice{border:1px solid #cfe0d6;border-radius:18px;background:linear-gradient(180deg,#fff,#f7fbf8);padding:20px;text-align:left;cursor:pointer;transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;box-shadow:0 2px 0 rgba(0,0,0,.02)}.homeChoice:hover{transform:translateY(-1px);border-color:#9bc8ad;box-shadow:0 10px 20px rgba(20,40,30,.08)}.homeChoiceIcon{font-size:34px;line-height:1}.homeChoiceTitle{margin-top:12px;font-size:24px;font-weight:900}.homeChoiceText{margin-top:8px;color:var(--muted);line-height:1.5;font-size:14px}.homeChoiceNote{margin-top:14px;display:inline-block;padding:7px 10px;border-radius:999px;background:#eef7f1;color:var(--green);font-size:12px;font-weight:800}.homeHelp{margin-top:14px;color:var(--muted);font-size:12px}.modeBtn{margin-top:8px}
+@media(max-width:760px){.homeOverlay{padding:12px}.homeCard{padding:18px;border-radius:18px}.homeTop{display:block}.homeTop h2{font-size:26px}.homeTop p{font-size:14px}.homeGrid{grid-template-columns:1fr}.homeChoice{padding:18px}.homeChoiceTitle{font-size:22px}.modeBtn{width:100%}}
+
+
+.manualFactorToggle{display:flex;align-items:center;gap:9px;margin-top:8px;padding:9px 10px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:13px;font-weight:800;color:var(--ink)}
+.manualFactorToggle input{width:20px;height:20px;accent-color:var(--green)}
+.manualFactorOff{opacity:.58;background:#f3f4f4!important}
+
 </style></head><body><div class="head"><div><h1>Lista de materiais e apelidos de voz</h1><div class="sub">Base do app Contagem por Voz - somente materiais ativos</div></div><div class="meta"><b>${withAlias}/${active.length}</b> materiais ativos com apelido<br>${inactive.length} inativos não incluídos<br>Atualizado em ${new Date().toLocaleString('pt-BR')}</div></div><div class="list">${lineHtml}</div><div class="footer"><span>Usuário: ${esc(currentProfile.full_name||currentProfile.username)}</span><span>Total impresso: ${active.length} materiais</span></div><script>window.onload=()=>setTimeout(()=>window.print(),250)<\/script></body></html>`);
   w.document.close();
 }
@@ -448,7 +502,7 @@ async function initAuth(){const {data:{session}}=await cloud.auth.getSession();c
 async function initCloud(){
   if(!cloudConfigured()){setCloudStatus('local','Configure supabase-config.js para compartilhar entre aparelhos.');return}
   if(!window.supabase?.createClient){setCloudStatus('offline','Biblioteca Supabase não carregou.');return}
-  try{cloud=window.supabase.createClient(CLOUD_CONF.url,CLOUD_CONF.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});cloudEnabled=true;const ok=await initAuth();cloud.auth.onAuthStateChange(async(event,session)=>{if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;updateAuthUI()}else if(session?.user&&!currentUser){currentUser=session.user;await loadProfile();updateAuthUI()}});if(!ok){setCloudStatus('online','Conectado • faça login para acessar os dados.');return}await pullCloud(true);await loadMaterialLocks(true);if(isAdmin()){await loadAudit();await loadUsers()}setInterval(()=>{if(document.visibilityState==='visible'&&currentUser)pullCloud()},60000);lockPollTimer=setInterval(()=>{if(document.visibilityState==='visible'&&currentUser)loadMaterialLocks(true)},8000);window.addEventListener('online',()=>{if(currentUser){pullCloud();loadMaterialLocks(true)}});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&currentUser){pullCloud();loadMaterialLocks(true)}});}
+  try{cloud=window.supabase.createClient(CLOUD_CONF.url,CLOUD_CONF.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});cloudEnabled=true;const ok=await initAuth();cloud.auth.onAuthStateChange(async(event,session)=>{if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;updateAuthUI()}else if(session?.user&&!currentUser){currentUser=session.user;await loadProfile();updateAuthUI()}});if(!ok){setCloudStatus('online','Conectado • faça login para acessar os dados.');return}await pullCloud(true);await loadMaterialLocks(true);if(isAdmin()){await loadAudit();await loadUsers()}maybeShowHomeScreen();setInterval(()=>{if(document.visibilityState==='visible'&&currentUser)pullCloud()},60000);lockPollTimer=setInterval(()=>{if(document.visibilityState==='visible'&&currentUser)loadMaterialLocks(true)},8000);window.addEventListener('online',()=>{if(currentUser){pullCloud();loadMaterialLocks(true)}});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&currentUser){pullCloud();loadMaterialLocks(true)}});}
   catch(err){console.warn(err);setCloudStatus('offline','Não foi possível conectar ao Supabase.');}
 }
 
@@ -979,9 +1033,23 @@ function evalManualExpression(raw){
   }
   return {value:total,expression:pretty.join(' + '),isExpression:terms.length>1||txt.includes('*')};
 }
-function manualCalc(){if(!manualMaterial)return null;const c=getCfg(manualMaterial.material);const um=(c.um||manualMaterial.um_sugerida||'KG').toUpperCase();const qRaw=String(document.getElementById('manualQty')?.value||'');const qEval=evalManualExpression(qRaw);let ftxt=String(document.getElementById('manualFactor')?.value||'').trim();let usedDefault=false;let factor=null;if(ftxt!==''){const fEval=evalManualExpression(ftxt);factor=fEval?.value??NaN}else if(c.factor!==''&&c.factor!=null){factor=Number(String(c.factor).replace(',','.'));usedDefault=true}if(!qEval||!Number.isFinite(qEval.value)||qEval.value<=0)return {error:'Informe uma quantidade válida. Você pode usar soma e multiplicação, ex.: 82,5*3+8+8.'};const q=qEval.value;if(factor!==null&&(!Number.isFinite(factor)||factor<=0))return {error:'Informe um fator válido.'};let result=factor!==null?q*factor:q;if(um==='UN')result=Math.round(result);else result=Math.round(result*1000)/1000;return {base:q,baseExpression:qEval.expression,isExpression:qEval.isExpression,factor,usedDefault,um,result}}
+function manualCalc(){if(!manualMaterial)return null;const c=getCfg(manualMaterial.material);const um=(c.um||manualMaterial.um_sugerida||'KG').toUpperCase();const qRaw=String(document.getElementById('manualQty')?.value||'');const qEval=evalManualExpression(qRaw);const useFactor=!!document.getElementById('manualUseFactor')?.checked;let ftxt=String(document.getElementById('manualFactor')?.value||'').trim();let usedDefault=false;let factor=null;if(useFactor){if(ftxt!==''){const fEval=evalManualExpression(ftxt);factor=fEval?.value??NaN}else if(c.factor!==''&&c.factor!=null){factor=Number(String(c.factor).replace(',','.'));usedDefault=true}else{return {error:'Fator ativado. Informe um fator válido.'}}if(!qEval||!Number.isFinite(qEval.value)||qEval.value<=0)return {error:'Informe uma quantidade válida. Você pode usar soma e multiplicação, ex.: 82,5*3+8+8.'};const q=qEval.value;if(factor!==null&&(!Number.isFinite(factor)||factor<=0))return {error:'Informe um fator válido.'};let result=factor!==null?q*factor:q;if(um==='UN')result=Math.round(result);else result=Math.round(result*1000)/1000;return {base:q,baseExpression:qEval.expression,isExpression:qEval.isExpression,factor,usedDefault,um,result}}
 function updateManualCalc(){const calc=manualCalc();const el=document.getElementById('manualCalcValue');const info=document.getElementById('manualCalcInfo');if(!el)return;if(!calc||calc.error){el.textContent='—';if(info)info.textContent=calc?.error||'';return}el.textContent=`${fmt(calc.result,calc.um)} ${calc.um}`;if(info){const baseTxt=calc.isExpression?`${calc.baseExpression} = ${fmt(calc.base,calc.um)}`:`${fmt(calc.base,calc.um)}`;info.textContent=calc.factor===null?`Quantidade: ${baseTxt}`:`${baseTxt} × ${fmt(calc.factor,'KG')}${calc.usedDefault?' (fator padrão)':''}`}}
-function renderManualSelected(){const box=document.getElementById('manualSelected');if(!box)return;if(!manualMaterial){box.className='hidden';box.innerHTML='';return}const m=manualMaterial,c=getCfg(m.material),u=(c.um||m.um_sugerida||'KG').toUpperCase(),alias=String(c.aliases||'').trim(),cur=totalFor(m.material);box.className='manualSelected';box.innerHTML=`<div class="manualSelectedHead"><div><div class="manualSelectedName">${m.descricao}</div><div class="manualHint">${m.material} • UM ${u} • acumulado: <b>${fmt(cur,u)} ${u}</b></div>${alias?`<div class="manualAlias">Apelido: ${alias}</div>`:''}</div><button type="button" class="btn" onclick="clearManualSelection()">Trocar material</button></div><div class="manualFields"><label>Quantidade<input id="manualQty" inputmode="text" placeholder="Ex.: 82,5*3+8+8" autocomplete="off"></label><label>Fator (opcional)<input id="manualFactor" inputmode="decimal" placeholder="${c.factor!==''&&c.factor!=null?'Padrão: '+c.factor:'Sem fator padrão'}" autocomplete="off"></label><label>UM<input value="${u}" disabled></label></div><div class="manualResultCalc"><div><div class="manualHint">Resultado</div><strong id="manualCalcValue">—</strong><div id="manualCalcInfo" class="manualHint"></div></div></div><div class="manualActions"><button type="button" class="btn primary" onclick="saveManualCount(false)">+ Adicionar</button><button type="button" class="btn" onclick="saveManualCount(true)">Adicionar e próximo</button></div><div class="manualHint" style="margin-top:8px">Quantidade aceita soma e multiplicação: <b>82,5*3+8+8</b>, <b>6x17+12</b> ou <b>6 × 17 + 12</b>. A multiplicação é calculada antes da soma. O fator padrão continua sendo aplicado ao total calculado. Pressione <b>Enter</b> para adicionar.</div>`;const q=document.getElementById('manualQty'),f=document.getElementById('manualFactor');for(const el of [q,f]){el?.addEventListener('input',updateManualCalc);el?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveManualCount(false)}})}updateManualCalc()}
+function renderManualSelected(){
+  const box=document.getElementById('manualSelected');if(!box)return;
+  if(!manualMaterial){box.className='hidden';box.innerHTML='';return}
+  const m=manualMaterial,c=getCfg(m.material),u=(c.um||m.um_sugerida||'KG').toUpperCase(),alias=String(c.aliases||'').trim(),cur=totalFor(m.material);
+  const factorHint=c.factor!==''&&c.factor!=null?`Padrão disponível: ${c.factor}`:'Sem fator padrão';
+  box.className='manualSelected';
+  box.innerHTML=`<div class="manualSelectedHead"><div><div class="manualSelectedName">${m.descricao}</div><div class="manualHint">${m.material} • UM ${u} • acumulado: <b>${fmt(cur,u)} ${u}</b></div>${alias?`<div class="manualAlias">Apelido: ${alias}</div>`:''}</div><button type="button" class="btn" onclick="clearManualSelection()">Trocar material</button></div><div class="manualFields"><label>Quantidade<input id="manualQty" inputmode="text" placeholder="Ex.: 82,5*3+8+8" autocomplete="off"></label><label>Fator (opcional)<input id="manualFactor" class="manualFactorOff" inputmode="decimal" placeholder="${factorHint}" autocomplete="off" disabled><span class="manualFactorToggle"><input id="manualUseFactor" type="checkbox"><span>Usar fator neste lançamento</span></span></label><label>UM<input value="${u}" disabled></label></div><div class="manualResultCalc"><div><div class="manualHint">Resultado</div><strong id="manualCalcValue">—</strong><div id="manualCalcInfo" class="manualHint"></div></div></div><div class="manualActions"><button type="button" class="btn primary" onclick="saveManualCount(false)">+ Adicionar</button><button type="button" class="btn" onclick="saveManualCount(true)">Adicionar e próximo</button></div><div class="manualHint" style="margin-top:8px">O fator começa <b>desativado</b> em cada lançamento. Ative somente quando precisar. Se houver fator padrão cadastrado, ele será usado ao ativar e deixar o campo vazio. Após salvar, o fator volta a ficar desativado. Quantidade aceita soma e multiplicação.</div>`;
+  const q=document.getElementById('manualQty'),f=document.getElementById('manualFactor'),use=document.getElementById('manualUseFactor');
+  q?.addEventListener('input',updateManualCalc);
+  q?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveManualCount(false)}});
+  f?.addEventListener('input',updateManualCalc);
+  f?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveManualCount(false)}});
+  use?.addEventListener('change',()=>{const on=!!use.checked;if(f){f.disabled=!on;f.classList.toggle('manualFactorOff',!on);if(!on)f.value='';else if(c.factor!==''&&c.factor!=null)f.placeholder='Padrão: '+c.factor;else f.placeholder='Informe o fator';if(on)setTimeout(()=>f.focus(),20)}updateManualCalc()});
+  updateManualCalc();
+}
 async function saveManualCount(next=false){
   if(!manualMaterial)return;
   const d=activeDay();
@@ -1009,7 +1077,6 @@ async function saveManualCount(next=false){
     // Mantém o mesmo material para lançamentos repetidos.
     renderManualSelected();
     const q=document.getElementById('manualQty');if(q){q.value='';q.focus()}
-    const f=document.getElementById('manualFactor');if(f)f.value='';
     updateManualCalc();
   }
 
@@ -1132,7 +1199,7 @@ function exportXlsx(dayId=(viewDay()?.id||'')){
 }
 
 document.getElementById('toggleFinishedBtn').onclick=toggleFinishedProducts;document.getElementById('toggleFinishedConfigBtn').onclick=toggleFinishedProducts;
-document.getElementById('loginBtn').onclick=loginUser;document.getElementById('loginPassword').addEventListener('keydown',e=>{if(e.key==='Enter')loginUser()});document.getElementById('logoutBtn').onclick=logoutUser;document.getElementById('createUserBtn').onclick=createUser;document.getElementById('auditRefresh').onclick=loadAudit;document.getElementById('auditSearch').oninput=renderAudit;
+document.getElementById('loginBtn').onclick=loginUser;document.getElementById('loginPassword').addEventListener('keydown',e=>{if(e.key==='Enter')loginUser()});document.getElementById('logoutBtn').onclick=logoutUser;document.getElementById('openHomeBtn')?.addEventListener('click',()=>openHomeScreen(true));document.getElementById('closeHomeBtn')?.addEventListener('click',closeHomeScreen);document.getElementById('goVoiceModeBtn')?.addEventListener('click',enterVoiceMode);document.getElementById('goManualModeBtn')?.addEventListener('click',enterManualMode);document.getElementById('createUserBtn').onclick=createUser;document.getElementById('auditRefresh').onclick=loadAudit;document.getElementById('auditSearch').oninput=renderAudit;
 const _syncBtn=document.getElementById('syncNowBtn');if(_syncBtn)_syncBtn.onclick=()=>{if(userIsEditing()){toast('Termine a edição do campo antes de atualizar a nuvem.');return}pullCloud(true)};document.getElementById('interpretBtn').onclick=interpret;document.getElementById('phrase').addEventListener('keydown',e=>{if(e.key==='Enter')interpret()});document.getElementById('search').oninput=renderTotals;document.getElementById('manualSearch').oninput=renderManualResults;document.getElementById('openManualBtn').onclick=openManualScreen;document.getElementById('closeManualBtn').onclick=closeManualScreen;document.getElementById('configSearch').oninput=renderConfig;document.getElementById('configUm').onchange=renderConfig;document.getElementById('configClear').onclick=()=>{document.getElementById('configSearch').value='';document.getElementById('configUm').value='';renderConfig()};document.getElementById('exportBtn').onclick=()=>exportXlsx();document.getElementById('startDayBtn').onclick=startDay;document.getElementById('finishDayBtn').onclick=finishDay;document.getElementById('downloadDayBtn').onclick=()=>exportXlsx();document.getElementById('resetBtn').onclick=async()=>{const d=viewDay();if(!d){toast('Nenhum dia selecionado.');return}if(d.status==='closed'){toast('Dias finalizados não podem ser limpos.');return}if(confirm('Limpar todos os lançamentos do dia em andamento?')){const ids=dayEntries(d.id).map(e=>e.id);entries=entries.filter(e=>e.day_id!==d.id);localStorage.setItem(STORE,JSON.stringify(entries));renderAll();if(cloudEnabled&&ids.length){try{await cloud.from('voice_entries').delete().eq('workspace',CLOUD_WORKSPACE).eq('day_id',d.id)}catch(err){console.warn(err)}}toast('Contagens do dia limpas.')}};
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));['totals','history','manual','config','days','audit','users'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));if(b.dataset.tab==='manual')setTimeout(()=>document.getElementById('manualSearch')?.focus(),50)});
 
@@ -1307,6 +1374,6 @@ renderAll();
 initCloud();
 
 document.getElementById('printAliasesBtn')?.addEventListener('click',printMaterialsAliases);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!document.getElementById('manualScreen')?.classList.contains('hidden'))closeManualScreen()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!document.getElementById('homeOverlay')?.classList.contains('hidden')){closeHomeScreen();return}if(!document.getElementById('manualScreen')?.classList.contains('hidden'))closeManualScreen()}});
 </script>
 </body></html>
