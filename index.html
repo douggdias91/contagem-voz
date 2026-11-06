@@ -136,6 +136,10 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .manualScreen .manualFields{grid-template-columns:1fr 1fr}.manualScreen .manualFields input{font-size:24px;padding:16px;text-align:center}
 .manualScreen .manualFields label:last-child{grid-column:1/-1}.manualScreen .manualResultCalc strong{font-size:32px}
 .manualScreen .manualActions{display:grid;grid-template-columns:1fr 1fr}.manualScreen .manualActions .btn{min-height:58px;font-size:17px}
+.manualScreen.manual-entry .manualSearchBox{display:none!important}
+.manualScreen.manual-entry .manualSelected{display:block!important}
+.manualScreen.manual-entry .manualScreenSub{display:none}
+.manualScreen.manual-entry .manualScreenTitle:after{content:" - Lançamento"}
 @media(max-width:720px){.manualScreenHeader{padding:10px 12px}.manualScreenBody{padding:10px 10px 28px}.manualScreenTitle{font-size:19px}.manualScreen .manualSearchBox{top:66px}.manualScreen .manualFields{grid-template-columns:1fr 1fr}.manualScreen .manualActions{grid-template-columns:1fr}.manualScreen .manualActions .btn{width:100%;min-height:58px}.manualScreen .manualSelectedHead .btn{width:100%;margin-top:10px}.manualLaunch{width:100%;justify-content:center}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -915,20 +919,37 @@ async function undoEntry(id){const removed=entries.find(e=>e.id===id);entries=en
 function openManualScreen(){
   if(!activeDay()){toast('Inicie um dia antes de registrar contagens.');return}
   const scr=document.getElementById('manualScreen');if(!scr)return;
-  scr.classList.remove('hidden');scr.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';
+  scr.classList.remove('hidden','manual-entry');scr.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';
   manualMaterial=null;const sel=document.getElementById('manualSelected');if(sel){sel.className='hidden';sel.innerHTML=''}
   const search=document.getElementById('manualSearch');if(search){search.value='';renderManualResults();setTimeout(()=>search.focus(),40)}
 }
 function closeManualScreen(){
   const scr=document.getElementById('manualScreen');if(!scr)return;
-  scr.classList.add('hidden');scr.setAttribute('aria-hidden','true');document.body.style.overflow='';manualMaterial=null;
+  scr.classList.add('hidden');scr.classList.remove('manual-entry');scr.setAttribute('aria-hidden','true');document.body.style.overflow='';manualMaterial=null;
 }
 let manualMaterial=null;
 function manualHay(m){const c=getCfg(m.material);return normText([m.material,m.descricao,voiceName(m),c.aliases,c.material_type,c.production_line,c.product_name,c.specification].join(' '))}
 function manualScore(q,m){if(!q)return 0;const h=manualHay(m);const nq=normText(q);if(h.includes(nq))return .98;const qt=tokens(nq);if(!qt.length)return 0;let hit=0;for(const t of qt){let best=0;for(const x of tokens(h))best=Math.max(best,tokenSimilar(t,x));if(best>=.82)hit+=best}return hit/qt.length}
 function renderManualResults(){const el=document.getElementById('manualResults');if(!el)return;const raw=document.getElementById('manualSearch')?.value||'';const q=normText(raw);if(!q){el.innerHTML='<div class="manualHint">Digite parte do nome, código ou apelido para localizar rapidamente.</div>';return}const list=activeVoiceMaterials().map(m=>({m,sc:manualScore(q,m)})).filter(x=>x.sc>=.42).sort((a,b)=>b.sc-a.sc||a.m.descricao.localeCompare(b.m.descricao)).slice(0,12);el.innerHTML=list.length?list.map(x=>{const c=getCfg(x.m.material);const a=String(c.aliases||'').trim();return `<button type="button" class="manualResult" onclick="selectManualMaterial('${x.m.material}')"><div><b>${x.m.descricao}</b></div><div class="code">${x.m.material} • ${c.um||x.m.um_sugerida}</div>${a?`<div class="alias">Apelido: ${a}</div>`:''}</button>`}).join(''):'<div class="manualHint">Nenhum material ativo encontrado.</div>'}
-function selectManualMaterial(mat){manualMaterial=MATERIALS.find(m=>m.material===mat)||null;renderManualSelected();const q=document.getElementById('manualQty');if(q){q.focus();q.select()}}
-function clearManualSelection(focusSearch=true){manualMaterial=null;const box=document.getElementById('manualSelected');if(box){box.className='hidden';box.innerHTML=''}if(focusSearch){const s=document.getElementById('manualSearch');if(s){s.value='';renderManualResults();s.focus()}}}
+function selectManualMaterial(mat){
+  manualMaterial=MATERIALS.find(m=>m.material===mat)||null;
+  if(!manualMaterial)return;
+  const scr=document.getElementById('manualScreen');
+  if(scr)scr.classList.add('manual-entry');
+  const results=document.getElementById('manualResults');
+  if(results)results.innerHTML='';
+  renderManualSelected();
+  if(scr)scr.scrollTo({top:0,behavior:'smooth'});
+  setTimeout(()=>{const q=document.getElementById('manualQty');if(q){q.focus();q.select()}},80);
+}
+function clearManualSelection(focusSearch=true){
+  manualMaterial=null;
+  const scr=document.getElementById('manualScreen');
+  if(scr)scr.classList.remove('manual-entry');
+  const box=document.getElementById('manualSelected');if(box){box.className='hidden';box.innerHTML=''}
+  if(focusSearch){const s=document.getElementById('manualSearch');if(s){s.value='';renderManualResults();setTimeout(()=>s.focus(),50)}}
+  if(scr)scr.scrollTo({top:0,behavior:'smooth'});
+}
 function manualCalc(){if(!manualMaterial)return null;const c=getCfg(manualMaterial.material);const um=(c.um||manualMaterial.um_sugerida||'KG').toUpperCase();const q=Number(String(document.getElementById('manualQty')?.value||'').replace(',','.'));let ftxt=String(document.getElementById('manualFactor')?.value||'').trim();let usedDefault=false;let factor=null;if(ftxt!==''){factor=Number(ftxt.replace(',','.'))}else if(c.factor!==''&&c.factor!=null){factor=Number(String(c.factor).replace(',','.'));usedDefault=true}if(!Number.isFinite(q)||q<=0)return {error:'Informe uma quantidade válida.'};if(factor!==null&&(!Number.isFinite(factor)||factor<=0))return {error:'Informe um fator válido.'};let result=factor!==null?q*factor:q;if(um==='UN')result=Math.round(result);else result=Math.round(result*1000)/1000;return {base:q,factor,usedDefault,um,result}}
 function updateManualCalc(){const calc=manualCalc();const el=document.getElementById('manualCalcValue');const info=document.getElementById('manualCalcInfo');if(!el)return;if(!calc||calc.error){el.textContent='—';if(info)info.textContent=calc?.error||'';return}el.textContent=`${fmt(calc.result,calc.um)} ${calc.um}`;if(info)info.textContent=calc.factor===null?`Entrada simples: ${fmt(calc.base,calc.um)}`:`${fmt(calc.base,'KG')} × ${fmt(calc.factor,'KG')}${calc.usedDefault?' (fator padrão)':''}`}
 function renderManualSelected(){const box=document.getElementById('manualSelected');if(!box)return;if(!manualMaterial){box.className='hidden';box.innerHTML='';return}const m=manualMaterial,c=getCfg(m.material),u=(c.um||m.um_sugerida||'KG').toUpperCase(),alias=String(c.aliases||'').trim(),cur=totalFor(m.material);box.className='manualSelected';box.innerHTML=`<div class="manualSelectedHead"><div><div class="manualSelectedName">${m.descricao}</div><div class="manualHint">${m.material} • UM ${u} • acumulado: <b>${fmt(cur,u)} ${u}</b></div>${alias?`<div class="manualAlias">Apelido: ${alias}</div>`:''}</div><button type="button" class="btn" onclick="clearManualSelection()">Trocar material</button></div><div class="manualFields"><label>Quantidade<input id="manualQty" inputmode="decimal" placeholder="0" autocomplete="off"></label><label>Fator (opcional)<input id="manualFactor" inputmode="decimal" placeholder="${c.factor!==''&&c.factor!=null?'Padrão: '+c.factor:'Sem fator padrão'}" autocomplete="off"></label><label>UM<input value="${u}" disabled></label></div><div class="manualResultCalc"><div><div class="manualHint">Resultado</div><strong id="manualCalcValue">—</strong><div id="manualCalcInfo" class="manualHint"></div></div></div><div class="manualActions"><button type="button" class="btn primary" onclick="saveManualCount(false)">+ Adicionar</button><button type="button" class="btn" onclick="saveManualCount(true)">Adicionar e próximo</button></div><div class="manualHint" style="margin-top:8px">Atalho: pressione <b>Enter</b> na quantidade ou fator para adicionar e manter o material selecionado.</div>`;const q=document.getElementById('manualQty'),f=document.getElementById('manualFactor');for(const el of [q,f]){el?.addEventListener('input',updateManualCalc);el?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveManualCount(false)}})}updateManualCalc()}
