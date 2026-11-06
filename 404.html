@@ -533,6 +533,48 @@ function tokenSimilar(a,b){
   const d=lev(a,b),mx=Math.max(a.length,b.length);if(mx>=5&&d===1)return .88;if(mx>=7&&d===2)return .76;
   return 0;
 }
+const DISTINCTIVE_TERMS=[
+  {id:'KIDS',patterns:['KIDS','KID']},
+  {id:'PREMIUM',patterns:['PREMIUM','PREM']},
+  {id:'BIPACK',patterns:['BIPACK','BI PACK','BIPAC','BIPAK']},
+  {id:'COLD_BREW',patterns:['COLD BREW','COLD BLUE']},
+  {id:'ICE_TEA',patterns:['ICE TEA','ICE TI']},
+  {id:'ZERO',patterns:['ZERO']},
+  {id:'TRADICIONAL',patterns:['TRADICIONAL','TRAD']},
+  {id:'ORGANICO',patterns:['ORGANICO','ORGANICA']},
+  {id:'DESCafeINADO',patterns:['DESCAFEINADO','DESCAFEINADA']},
+  {id:'PROMO',patterns:['PROMO','PROMOCIONAL']}
+];
+function distinctiveTerms(text){
+  const n=' '+normText(text)+' ';
+  const found=new Set();
+  for(const d of DISTINCTIVE_TERMS){
+    for(const raw of d.patterns){
+      const pat=normText(raw);
+      if(pat.includes(' ')){
+        if(n.includes(' '+pat+' ')){found.add(d.id);break}
+      }else if(new RegExp('(?:^|\\s)'+pat+'(?:\\s|$)').test(n.trim())){found.add(d.id);break}
+    }
+  }
+  return found;
+}
+function applyDistinctiveScore(base,phrase,m,c){
+  const spoken=distinctiveTerms(phrase);
+  const source=[voiceName(m),m.descricao,c.aliases,c.product_name,c.specification].filter(Boolean).join(' ');
+  const candidate=distinctiveTerms(source);
+  let score=base;
+  // Termo distintivo presente na fala e no candidato: evidência forte.
+  for(const t of spoken){
+    if(candidate.has(t)) score+=0.13;
+    else score-=0.18;
+  }
+  // Termo distintivo existe no candidato, mas não foi falado: penaliza o excesso.
+  // Ex.: "etiqueta morango" não deve preferir "etiqueta KIDS morango".
+  for(const t of candidate){
+    if(!spoken.has(t)) score-=0.16;
+  }
+  return score;
+}
 function similarity(phrase,candidate){
   const p=tokens(phrase),c=tokens(candidate);if(!c.length)return 0;
   let hit=0,weighted=0,matched=0;
@@ -617,6 +659,10 @@ function findMatches(phrase){
     const spec=String(c.specification||'').trim();
     if(product){const ps=similarity(phrase,product);if(ps>=.75)best+=.18*ps;else if(ps<.35)best-=.05}
     if(spec){const specN=normText(spec);if(specN && phraseNorm.includes(specN))best+=.22;else {const ss=similarity(phrase,spec);if(ss>=.8)best+=.16*ss}}
+
+    // Palavras distintivas evitam que um item mais específico ganhe só por compartilhar o sabor.
+    // Ex.: se o operador disser apenas 'etiqueta morango', um item 'KIDS morango' perde pontos.
+    best=applyDistinctiveScore(best,phrase,m,c);
 
     // Dimensões completas têm prioridade sobre correspondências parciais.
     // Se a fala contém 6x2x10, um material 6x2x10 recebe forte bônus; um material apenas 2x10 é penalizado.
