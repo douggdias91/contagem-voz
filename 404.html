@@ -573,6 +573,14 @@ function applyDistinctiveScore(base,phrase,m,c){
   for(const t of candidate){
     if(!spoken.has(t)) score-=0.16;
   }
+
+  // KIDS e um qualificador obrigatorio. Se o candidato for KIDS e a fala nao
+  // contiver KIDS, ele nao pode vencer apenas por compartilhar sabor/apelido.
+  // O inverso tambem vale: se o operador disser KIDS, materiais sem KIDS
+  // recebem uma penalidade forte.
+  if(candidate.has('KIDS') && !spoken.has('KIDS')) score=Math.min(score,0.38);
+  if(spoken.has('KIDS') && !candidate.has('KIDS')) score-=0.45;
+
   return score;
 }
 function similarity(phrase,candidate){
