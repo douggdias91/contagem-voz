@@ -188,7 +188,7 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
   </div>
 </div>
 <div class="wrap">
-  <div class="top"><div><h1>Contagem por Voz — v47</h1><p>Contagem diária compartilhada em nuvem com login, identificação de usuários e auditoria.</p><div class="userBar"><span id="currentUserChip" class="userChip">Não autenticado</span><button id="openHomeBtn" class="btn modeBtn hidden">⌂ Escolher modo</button><button id="logoutBtn" class="btn hidden">Sair</button></div></div><div><div class="badge" id="cloudBadge">SOMENTE LOCAL</div><div class="sub" id="cloudDetail" style="text-align:right;margin-top:4px">Supabase não configurado</div></div></div>
+  <div class="top"><div><h1>Contagem por Voz — v49</h1><p>Contagem diária compartilhada em nuvem com login, identificação de usuários e auditoria.</p><div class="userBar"><span id="currentUserChip" class="userChip">Não autenticado</span><button id="openHomeBtn" class="btn modeBtn hidden">⌂ Escolher modo</button><button id="logoutBtn" class="btn hidden">Sair</button></div></div><div><div class="badge" id="cloudBadge">SOMENTE LOCAL</div><div class="sub" id="cloudDetail" style="text-align:right;margin-top:4px">Supabase não configurado</div></div></div>
 
   <div id="dayPanel" class="dayPanel">
     <div class="dayHead">
@@ -445,13 +445,47 @@ function updateAuthUI(){
   document.getElementById('logoutBtn')?.classList.toggle('hidden',!logged);document.getElementById('openHomeBtn')?.classList.toggle('hidden',!logged);
   document.querySelectorAll('.adminOnly').forEach(x=>x.classList.toggle('hidden',!isAdmin()));
 }
+async function ensureCloudReady(){
+  if(cloud && cloudEnabled) return true;
+  // Aguarda brevemente caso os scripts/config ainda estejam carregando.
+  for(let i=0;i<12;i++){
+    if(window.supabase?.createClient && cloudConfigured()) break;
+    await new Promise(r=>setTimeout(r,150));
+  }
+  if(!cloudConfigured()){
+    console.warn('Supabase config ausente ou invalida', CLOUD_CONF);
+    return false;
+  }
+  if(!window.supabase?.createClient){
+    console.warn('Biblioteca Supabase ainda nao carregou.');
+    return false;
+  }
+  try{
+    cloud=window.supabase.createClient(CLOUD_CONF.url,CLOUD_CONF.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+    cloudEnabled=true;
+    setCloudStatus('online','Conectado • autenticação disponível.');
+    return true;
+  }catch(err){
+    console.warn('Falha ao inicializar Supabase sob demanda:',err);
+    cloud=null;cloudEnabled=false;
+    return false;
+  }
+}
 async function loginUser(){
   const u=document.getElementById('loginUsername').value.trim();
   const pw=document.getElementById('loginPassword').value;
   const errEl=document.getElementById('loginError');
   errEl.textContent='';
   if(!u||!pw){errEl.textContent='Informe usuário e senha.';return}
-  if(!cloud||!cloudEnabled){errEl.textContent='Não foi possível conectar ao Supabase. Atualize a página e tente novamente.';return}
+  if(!cloud||!cloudEnabled){
+    errEl.textContent='Conectando ao Supabase…';
+    const ready=await ensureCloudReady();
+    if(!ready){
+      errEl.textContent='Não foi possível conectar ao Supabase. Verifique a internet e atualize a página.';
+      return;
+    }
+    errEl.textContent='';
+  }
   const email=u.includes('@')?u.trim().toLowerCase():loginEmail(u);
   let data;
   try{
@@ -543,9 +577,13 @@ async function createUser(){if(!isAdmin())return;const full_name=document.getEle
 async function setUserActive(id,active){if(!isAdmin())return;try{await callAdminUsers({action:active?'enable':'disable',user_id:id});await logAudit(active?'user_enable':'user_disable','user',id,{});await loadUsers()}catch(e){toast(e.message)}}
 async function initAuth(){const {data:{session}}=await cloud.auth.getSession();currentUser=session?.user||null;if(currentUser){try{await loadProfile()}catch(e){currentProfile=null}}updateAuthUI();if(!currentUser||!currentProfile)return false;EDITOR_ID=currentUser.id;return true}
 async function initCloud(){
-  if(!cloudConfigured()){setCloudStatus('local','Configure supabase-config.js para compartilhar entre aparelhos.');return}
-  if(!window.supabase?.createClient){setCloudStatus('offline','Biblioteca Supabase não carregou.');return}
-  try{cloud=window.supabase.createClient(CLOUD_CONF.url,CLOUD_CONF.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});cloudEnabled=true;const ok=await initAuth();cloud.auth.onAuthStateChange(async(event,session)=>{if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;updateAuthUI()}else if(session?.user&&!currentUser){currentUser=session.user;await loadProfile();updateAuthUI()}});if(!ok){setCloudStatus('online','Conectado • faça login para acessar os dados.');return}await pullCloud(true);await loadMaterialLocks(true);if(isAdmin()){await loadAudit();await loadUsers()}maybeShowHomeScreen();setInterval(()=>{if(document.visibilityState==='visible'&&currentUser)pullCloud()},60000);lockPollTimer=setInterval(()=>{if(document.visibilityState==='visible'&&currentUser)loadMaterialLocks(true)},8000);window.addEventListener('online',()=>{if(currentUser){pullCloud();loadMaterialLocks(true)}});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&currentUser){pullCloud();loadMaterialLocks(true)}});}
+  const ready=await ensureCloudReady();
+  if(!ready){
+    if(!cloudConfigured())setCloudStatus('local','Configuração do Supabase não carregou.');
+    else setCloudStatus('offline','Biblioteca/conexão Supabase indisponível.');
+    return;
+  }
+  try{const ok=await initAuth();cloud.auth.onAuthStateChange(async(event,session)=>{if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;updateAuthUI()}else if(session?.user&&!currentUser){currentUser=session.user;await loadProfile();updateAuthUI()}});if(!ok){setCloudStatus('online','Conectado • faça login para acessar os dados.');return}await pullCloud(true);await loadMaterialLocks(true);if(isAdmin()){await loadAudit();await loadUsers()}maybeShowHomeScreen();setInterval(()=>{if(document.visibilityState==='visible'&&currentUser)pullCloud()},60000);lockPollTimer=setInterval(()=>{if(document.visibilityState==='visible'&&currentUser)loadMaterialLocks(true)},8000);window.addEventListener('online',()=>{if(currentUser){pullCloud();loadMaterialLocks(true)}});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&currentUser){pullCloud();loadMaterialLocks(true)}});}
   catch(err){console.warn(err);setCloudStatus('offline','Não foi possível conectar ao Supabase.');}
 }
 
