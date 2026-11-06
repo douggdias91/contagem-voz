@@ -154,6 +154,11 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .manualFactorToggle{display:flex;align-items:center;gap:9px;margin-top:8px;padding:9px 10px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:13px;font-weight:800;color:var(--ink)}
 .manualFactorToggle input{width:20px;height:20px;accent-color:var(--green)}
 .manualFactorOff{opacity:.58;background:#f3f4f4!important}
+
+/* v50 - modal interaction safety */
+#loginOverlay.hidden,#homeOverlay.hidden,#manualScreen.hidden{display:none!important;visibility:hidden!important;pointer-events:none!important}
+#loginOverlay:not(.hidden),#homeOverlay:not(.hidden),#manualScreen:not(.hidden){visibility:visible;pointer-events:auto}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -188,7 +193,7 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
   </div>
 </div>
 <div class="wrap">
-  <div class="top"><div><h1>Contagem por Voz — v49</h1><p>Contagem diária compartilhada em nuvem com login, identificação de usuários e auditoria.</p><div class="userBar"><span id="currentUserChip" class="userChip">Não autenticado</span><button id="openHomeBtn" class="btn modeBtn hidden">⌂ Escolher modo</button><button id="logoutBtn" class="btn hidden">Sair</button></div></div><div><div class="badge" id="cloudBadge">SOMENTE LOCAL</div><div class="sub" id="cloudDetail" style="text-align:right;margin-top:4px">Supabase não configurado</div></div></div>
+  <div class="top"><div><h1>Contagem por Voz — v50</h1><p>Contagem diária compartilhada em nuvem com login, identificação de usuários e auditoria.</p><div class="userBar"><span id="currentUserChip" class="userChip">Não autenticado</span><button id="openHomeBtn" class="btn modeBtn hidden">⌂ Escolher modo</button><button id="logoutBtn" class="btn hidden">Sair</button></div></div><div><div class="badge" id="cloudBadge">SOMENTE LOCAL</div><div class="sub" id="cloudDetail" style="text-align:right;margin-top:4px">Supabase não configurado</div></div></div>
 
   <div id="dayPanel" class="dayPanel">
     <div class="dayHead">
@@ -311,6 +316,49 @@ document.addEventListener('focusout',e=>{
 const CLOUD_CONF=window.CONTAGEM_SUPABASE||{};
 const CLOUD_WORKSPACE=CLOUD_CONF.workspace||'leao-contagem-voz';
 let currentUser=null;let currentProfile=null;let auditRows=[];let userRows=[];
+let homeShownThisSession=false;
+function openHomeScreen(force=false){
+  if(!currentUser||!currentProfile)return;
+  const ov=document.getElementById('homeOverlay');
+  if(!ov)return;
+  const manual=document.getElementById('manualScreen');
+  if(manual&&!manual.classList.contains('hidden'))closeManualScreen();
+  ov.classList.remove('hidden');
+  ov.setAttribute('aria-hidden','false');
+  ov.style.display='flex';
+  ov.style.pointerEvents='auto';
+  document.body.style.overflow='hidden';
+}
+function closeHomeScreen(){
+  const ov=document.getElementById('homeOverlay');
+  if(!ov)return;
+  ov.classList.add('hidden');
+  ov.setAttribute('aria-hidden','true');
+  ov.style.display='none';
+  ov.style.pointerEvents='none';
+  const manual=document.getElementById('manualScreen');
+  if(!manual||manual.classList.contains('hidden'))document.body.style.overflow='';
+}
+function maybeShowHomeScreen(force=false){
+  if(!currentUser||!currentProfile)return;
+  if(homeShownThisSession&&!force)return;
+  homeShownThisSession=true;
+  setTimeout(()=>openHomeScreen(true),60);
+}
+function enterVoiceMode(){
+  closeHomeScreen();
+  const manual=document.getElementById('manualScreen');
+  if(manual&&!manual.classList.contains('hidden'))closeManualScreen();
+  setTimeout(()=>{
+    document.querySelector('.voiceBox')?.scrollIntoView({behavior:'smooth',block:'center'});
+    document.getElementById('phrase')?.focus();
+  },60);
+}
+function enterManualMode(){
+  closeHomeScreen();
+  setTimeout(()=>openManualScreen(),40);
+}
+
 function loginEmail(username){return String(username||'').trim().toLowerCase().replace(/[^a-z0-9._-]/g,'')+'@contagem-voz.app'}
 function actor(){return {id:currentUser?.id||null,name:currentProfile?.full_name||currentProfile?.username||'Desconhecido',username:currentProfile?.username||''}}
 function isAdmin(){return currentProfile?.role==='admin'}
@@ -440,7 +488,7 @@ async function loadProfile(){
   if(error)throw error;currentProfile=data||null;return currentProfile;
 }
 function updateAuthUI(){
-  const logged=!!currentUser&&!!currentProfile;document.getElementById('loginOverlay')?.classList.toggle('hidden',logged);
+  const logged=!!currentUser&&!!currentProfile;const loginOv=document.getElementById('loginOverlay');if(loginOv){loginOv.classList.toggle('hidden',logged);loginOv.style.display=logged?'none':'flex';loginOv.style.pointerEvents=logged?'none':'auto';}
   const chip=document.getElementById('currentUserChip');if(chip)chip.textContent=logged?`${currentProfile.full_name} • ${currentProfile.role==='admin'?'Administrador':currentProfile.username}`:'Não autenticado';
   document.getElementById('logoutBtn')?.classList.toggle('hidden',!logged);document.getElementById('openHomeBtn')?.classList.toggle('hidden',!logged);
   document.querySelectorAll('.adminOnly').forEach(x=>x.classList.toggle('hidden',!isAdmin()));
