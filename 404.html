@@ -558,6 +558,39 @@ function distinctiveTerms(text){
   }
   return found;
 }
+const PRODUCT_FLAVOR_TERMS=new Set([
+  'MORANGO','CAMOMILA','HORTELA','LARANJA','LIMAO','PESSEGO','CIDREIRA','GENGIBRE','BAUNILHA',
+  'ABACAXI','MACA','CANELA','FRAMBOESA','AMORA','MARACUJA','GUARANA','ACAI','MEL','CURCUMA',
+  'ERVA','DOCE','BOLDO','HIBISCO','ROSA','MATE','MATTE','MENTA','CASSIS','FUNCHO','CRANBERRY'
+]);
+function productFlavorTerms(text){
+  const found=new Set();
+  for(const t of tokens(text)) if(PRODUCT_FLAVOR_TERMS.has(t)) found.add(t);
+  // combinações comuns que não devem ser confundidas com um sabor isolado
+  return found;
+}
+function applyProductFlavorConstraint(base,phrase,m,c){
+  const spoken=productFlavorTerms(phrase);
+  if(!spoken.size) return base;
+  const source=[voiceName(m),m.descricao,c.aliases,c.product_name].filter(Boolean).join(' ');
+  const candidate=productFlavorTerms(source);
+  const matched=[...spoken].filter(t=>candidate.has(t));
+
+  // Quando a fala contém produto/sabor claro, ele passa a ser requisito semântico.
+  // Ex.: MORANGO não pode perder para CAMOMILA apenas porque ambos são 10x10.
+  if(matched.length===0){
+    if(candidate.size) return Math.min(base,0.30); // há sabor no candidato, mas é outro: contradição forte.
+    return Math.min(base,0.42);                    // candidato sem sabor identificável: baixa confiança.
+  }
+
+  // Correspondência de produto/sabor é evidência forte e deve superar dimensões genéricas iguais.
+  let score=base+Math.min(0.28,0.16+0.06*matched.length);
+
+  // Se a fala traz mais de um sabor e o candidato cobre apenas parte, mantém cautela.
+  if(spoken.size>=2 && matched.length<spoken.size) score-=0.12*(spoken.size-matched.length);
+  return score;
+}
+
 function applyDistinctiveScore(base,phrase,m,c){
   const spoken=distinctiveTerms(phrase);
   const source=[voiceName(m),m.descricao,c.aliases,c.product_name,c.specification].filter(Boolean).join(' ');
@@ -690,6 +723,10 @@ function findMatches(phrase){
       else if(partialDim) best-=.38;
       else if(materialDims.size) best-=.10;
     }
+
+    // Produto/sabor é validado DEPOIS da dimensão para impedir que 10x10, 20x10 etc.
+    // sobreponham uma contradição semântica como MORANGO x CAMOMILA.
+    best=applyProductFlavorConstraint(best,phrase,m,c);
 
     if(new RegExp('(?:^|\\s)'+String(m.material).replace(/\\D/g,'')+'(?:\\s|$)').test(phraseNorm.replace(/\\D+/g,' '))){best=1;exactCode=true;matchSource='codigo'}
     out.push({m,score:Math.max(0,Math.min(1,best)),family:detectFamily(voiceName(m)),materialType,materialLine,matchSource,exactAlias,exactCode});
