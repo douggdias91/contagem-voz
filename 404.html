@@ -380,7 +380,7 @@ function printMaterialsAliases(){
   if(!currentUser||!currentProfile){toast('Entre no app antes de imprimir.');return;}
   const active=MATERIALS.filter(m=>!isInactiveMaterial(m));
   const inactive=MATERIALS.filter(m=>isInactiveMaterial(m));
-  const rows=active.map(m=>{const c=getCfg(m);return {m,c}});
+  const rows=active.map(m=>{const c=getCfg(m.material);return {m,c}});
   const withAlias=rows.filter(x=>String(x.c.aliases||'').trim()).length;
   const esc=x=>String(x??'').replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
   const lineHtml=rows.map(({m,c})=>`<div class="item"><div class="code">${esc(m.material)}</div><div class="desc">${esc(m.descricao)}</div><div class="alias">${esc(c.aliases||'Sem apelido cadastrado')}</div></div>`).join('');
