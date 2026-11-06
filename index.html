@@ -953,7 +953,53 @@ function clearManualSelection(focusSearch=true){
 function manualCalc(){if(!manualMaterial)return null;const c=getCfg(manualMaterial.material);const um=(c.um||manualMaterial.um_sugerida||'KG').toUpperCase();const q=Number(String(document.getElementById('manualQty')?.value||'').replace(',','.'));let ftxt=String(document.getElementById('manualFactor')?.value||'').trim();let usedDefault=false;let factor=null;if(ftxt!==''){factor=Number(ftxt.replace(',','.'))}else if(c.factor!==''&&c.factor!=null){factor=Number(String(c.factor).replace(',','.'));usedDefault=true}if(!Number.isFinite(q)||q<=0)return {error:'Informe uma quantidade válida.'};if(factor!==null&&(!Number.isFinite(factor)||factor<=0))return {error:'Informe um fator válido.'};let result=factor!==null?q*factor:q;if(um==='UN')result=Math.round(result);else result=Math.round(result*1000)/1000;return {base:q,factor,usedDefault,um,result}}
 function updateManualCalc(){const calc=manualCalc();const el=document.getElementById('manualCalcValue');const info=document.getElementById('manualCalcInfo');if(!el)return;if(!calc||calc.error){el.textContent='—';if(info)info.textContent=calc?.error||'';return}el.textContent=`${fmt(calc.result,calc.um)} ${calc.um}`;if(info)info.textContent=calc.factor===null?`Entrada simples: ${fmt(calc.base,calc.um)}`:`${fmt(calc.base,'KG')} × ${fmt(calc.factor,'KG')}${calc.usedDefault?' (fator padrão)':''}`}
 function renderManualSelected(){const box=document.getElementById('manualSelected');if(!box)return;if(!manualMaterial){box.className='hidden';box.innerHTML='';return}const m=manualMaterial,c=getCfg(m.material),u=(c.um||m.um_sugerida||'KG').toUpperCase(),alias=String(c.aliases||'').trim(),cur=totalFor(m.material);box.className='manualSelected';box.innerHTML=`<div class="manualSelectedHead"><div><div class="manualSelectedName">${m.descricao}</div><div class="manualHint">${m.material} • UM ${u} • acumulado: <b>${fmt(cur,u)} ${u}</b></div>${alias?`<div class="manualAlias">Apelido: ${alias}</div>`:''}</div><button type="button" class="btn" onclick="clearManualSelection()">Trocar material</button></div><div class="manualFields"><label>Quantidade<input id="manualQty" inputmode="decimal" placeholder="0" autocomplete="off"></label><label>Fator (opcional)<input id="manualFactor" inputmode="decimal" placeholder="${c.factor!==''&&c.factor!=null?'Padrão: '+c.factor:'Sem fator padrão'}" autocomplete="off"></label><label>UM<input value="${u}" disabled></label></div><div class="manualResultCalc"><div><div class="manualHint">Resultado</div><strong id="manualCalcValue">—</strong><div id="manualCalcInfo" class="manualHint"></div></div></div><div class="manualActions"><button type="button" class="btn primary" onclick="saveManualCount(false)">+ Adicionar</button><button type="button" class="btn" onclick="saveManualCount(true)">Adicionar e próximo</button></div><div class="manualHint" style="margin-top:8px">Atalho: pressione <b>Enter</b> na quantidade ou fator para adicionar e manter o material selecionado.</div>`;const q=document.getElementById('manualQty'),f=document.getElementById('manualFactor');for(const el of [q,f]){el?.addEventListener('input',updateManualCalc);el?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveManualCount(false)}})}updateManualCalc()}
-async function saveManualCount(next=false){if(!manualMaterial)return;const d=activeDay();if(!d){toast('Inicie um dia antes de registrar contagens.');return}const calc=manualCalc();if(!calc||calc.error){toast(calc?.error||'Contagem inválida.');return}const m=manualMaterial,a=actor(),now=Date.now();const e={id:crypto.randomUUID?crypto.randomUUID():String(now)+Math.random(),ts:now,material:m.material,descricao:m.descricao,phrase:'Contagem manual',base:calc.base,factor:calc.factor,defaultFactor:calc.usedDefault,um:calc.um,result:calc.result,day_id:d.id,day_date:d.day_date,created_by:a.id,created_by_name:a.name};entries.push(e);localStorage.setItem(STORE,JSON.stringify(entries));await pushEntryCloud(e);await logAudit('count_create','entry',e.id,{source:'manual',material:e.material,result:e.result,um:e.um,day_id:e.day_id});toast(`Adicionado: ${fmt(e.result,e.um)} ${e.um}`);renderAll({preserveEditing:true});if(next){clearManualSelection(true)}else{renderManualSelected();const q=document.getElementById('manualQty');if(q){q.value='';q.focus()}const f=document.getElementById('manualFactor');if(f)f.value='';updateManualCalc()}}
+async function saveManualCount(next=false){
+  if(!manualMaterial)return;
+  const d=activeDay();
+  if(!d){toast('Inicie um dia antes de registrar contagens.');return}
+  const calc=manualCalc();
+  if(!calc||calc.error){toast(calc?.error||'Contagem inválida.');return}
+  const m=manualMaterial,a=actor(),now=Date.now();
+  const e={id:crypto.randomUUID?crypto.randomUUID():String(now)+Math.random(),ts:now,material:m.material,descricao:m.descricao,phrase:'Contagem manual',base:calc.base,factor:calc.factor,defaultFactor:calc.usedDefault,um:calc.um,result:calc.result,day_id:d.id,day_date:d.day_date,created_by:a.id,created_by_name:a.name};
+
+  // Salvamento otimista: registra localmente primeiro para a interface responder sem esperar a nuvem.
+  entries.push(e);
+  localStorage.setItem(STORE,JSON.stringify(entries));
+  toast(`Adicionado: ${fmt(e.result,e.um)} ${e.um}`);
+
+  if(next){
+    // Volta imediatamente para a busca do próximo item, sem renderizar a tela inteira.
+    manualMaterial=null;
+    const scr=document.getElementById('manualScreen');
+    if(scr)scr.classList.remove('manual-entry');
+    const box=document.getElementById('manualSelected');
+    if(box){box.className='hidden';box.innerHTML=''}
+    const s=document.getElementById('manualSearch');
+    if(s){s.value='';renderManualResults();requestAnimationFrame(()=>{s.focus();});}
+  }else{
+    // Mantém o mesmo material para lançamentos repetidos.
+    renderManualSelected();
+    const q=document.getElementById('manualQty');if(q){q.value='';q.focus()}
+    const f=document.getElementById('manualFactor');if(f)f.value='';
+    updateManualCalc();
+  }
+
+  // Atualiza apenas os painéis de apoio; evita renderAll(), que é pesado e atrasa o próximo lançamento.
+  renderDayUI();
+  renderTotals();
+  renderHistory();
+
+  // Sincroniza depois que a interface já foi liberada para o próximo lançamento.
+  try{
+    await Promise.all([
+      pushEntryCloud(e),
+      logAudit('count_create','entry',e.id,{source:'manual',material:e.material,result:e.result,um:e.um,day_id:e.day_id})
+    ]);
+  }catch(err){
+    console.warn('Falha ao sincronizar contagem manual:',err);
+    setCloudStatus('offline','SALVO LOCALMENTE');
+  }
+}
 function renderTotals(){const vd=viewDay();const did=vd?.id||'';const scoped=did?dayEntries(did):[];const q=normText(document.getElementById('search').value);const base=visibleMaterials();const filtered=base.filter(m=>!q||normText(m.material+' '+m.descricao+' '+voiceName(m)).includes(q));const body=document.getElementById('totalsBody');body.innerHTML=filtered.map(m=>{const c=getCfg(m.material),u=c.um||m.um_sugerida,t=totalFor(m.material);return `<tr><td>${m.material}</td><td><div class="materialName">${m.descricao}</div></td><td>${voiceName(m)}</td><td>${u}</td><td class="num"><b>${t?fmt(t,u):'—'}</b></td></tr>`}).join('');const mobile=document.getElementById('mobileTotals');if(mobile)mobile.innerHTML=filtered.map(m=>{const c=getCfg(m.material),u=c.um||m.um_sugerida,t=totalFor(m.material);return `<div class="mobileMaterialCard"><div class="mTitle">${m.descricao}</div><div class="mCode">${m.material}</div><div class="mGrid"><div class="mCell"><span>UM</span><b>${u}</b></div><div class="mCell"><span>Contagem</span><b class="mTotal">${t?fmt(t,u):'—'}</b></div><div class="mCell"><span>Nome de voz</span><b style="font-size:12px">${voiceName(m)}</b></div></div></div>`}).join('');document.getElementById('matCount').textContent=base.length;document.getElementById('entryCount').textContent=scoped.length;document.getElementById('countedCount').textContent=new Set(scoped.map(e=>e.material)).size;}
 function renderHistory(){const el=document.getElementById('historyList');const vd=viewDay();const scoped=vd?dayEntries(vd.id):[];if(!scoped.length){el.innerHTML='<div class="hint">Nenhuma contagem neste dia.</div>';return}el.innerHTML=[...scoped].reverse().map(e=>`<div class="historyItem"><div class="row"><div><b>${e.material} — ${e.descricao}</b><div class="sub">${new Date(e.ts).toLocaleString('pt-BR')} • <b>${e.created_by_name||'Usuário não identificado'}</b> • “${e.phrase.replace(/</g,'&lt;')}”</div></div><div><span class="pill">${fmt(e.result,e.um)} ${e.um}</span></div></div><div class="sub" style="margin-top:6px">${e.factor===null?`Entrada simples: ${fmt(e.base,e.um)}`:`${fmt(e.base,'KG')} × ${fmt(e.factor,'KG')} = ${fmt(e.result,e.um)} ${e.um}${e.defaultFactor?' • fator padrão':''}`} • acumulado atual: <b>${fmt(totalFor(e.material),e.um)} ${e.um}</b></div><div class="actions"><button class="btn danger" onclick="undoEntry('${e.id}')">Desfazer esta entrada</button></div></div>`).join('')}
 function renderConfig(){
