@@ -121,6 +121,22 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .finishedToggle.active{background:#fff3cd;border-color:#e0ad2f;color:#6d5200}.finishedTag{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:999px;background:#fff3cd;color:#755900;font-size:11px;font-weight:800;margin-left:6px}.finishedHint{font-size:12px;color:#6f7d75;margin:6px 0 10px}.finishedHiddenInfo{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:10px;background:#f5f7f6;border:1px solid #dde5e1;font-size:12px;color:#526159}.inactiveAction{background:#fff7e6;border-color:#e3b341;color:#694f00}.inactiveAction.reactivate{background:#eaf8ee;border-color:#83c995;color:#166534}
 
 .manualWrap{display:grid;gap:12px}.manualSearchBox{position:relative}.manualResults{display:grid;gap:7px;margin-top:8px;max-height:360px;overflow:auto}.manualResult{width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px 13px;cursor:pointer}.manualResult:hover,.manualResult:focus{border-color:#84c89a;background:#f1fbf4;outline:none}.manualResult .code{font-size:12px;color:var(--muted);font-weight:700}.manualResult .alias{font-size:12px;color:#176b36;margin-top:3px}.manualSelected{border:1px solid #a8d9b6;background:#f3fbf5;border-radius:16px;padding:14px}.manualSelectedHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.manualSelectedName{font-size:17px;font-weight:800;line-height:1.25}.manualAlias{font-size:12px;color:#176b36;margin-top:5px}.manualFields{display:grid;grid-template-columns:1.25fr 1fr .8fr;gap:10px;margin-top:12px}.manualFields label{display:grid;gap:5px;font-size:12px;color:var(--muted);font-weight:700}.manualFields input{width:100%;padding:13px;border:1px solid var(--line);border-radius:12px;font-size:18px;background:#fff}.manualResultCalc{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;padding:11px 13px;border-radius:12px;background:#fff;border:1px solid #dfe8e2}.manualResultCalc strong{font-size:24px;color:#116c35}.manualActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.manualHint{font-size:12px;color:var(--muted)}@media(max-width:720px){.manualFields{grid-template-columns:1fr 1fr}.manualFields label:last-child{grid-column:1/-1}.manualResult{padding:14px}.manualActions .btn{flex:1 1 160px;min-height:48px}.manualSelectedHead{display:block}.manualSelectedHead .btn{margin-top:8px}}
+
+/* v40 - Contagem manual em tela dedicada */
+.manualLaunch{display:inline-flex;align-items:center;gap:8px;margin:10px 0 2px;min-height:48px;font-size:16px}
+.manualScreen{position:fixed;inset:0;z-index:9999;background:#f6faf7;overflow:auto;padding:0}
+.manualScreen.hidden{display:none!important}
+.manualScreenHeader{position:sticky;top:0;z-index:2;background:#fff;border-bottom:1px solid var(--line);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.manualScreenTitle{font-size:20px;font-weight:900;line-height:1.15}.manualScreenSub{font-size:12px;color:var(--muted);margin-top:2px}
+.manualScreenBody{max-width:760px;margin:0 auto;padding:14px 14px 32px}
+.manualScreen .manualSearchBox{position:sticky;top:76px;z-index:1;background:#f6faf7;padding:4px 0 10px}
+.manualScreen .manualSearchBox .phrase{font-size:19px;padding:16px;border-radius:14px}
+.manualScreen .manualResults{max-height:none;overflow:visible;gap:9px}.manualScreen .manualResult{min-height:64px;padding:14px 15px;font-size:16px}
+.manualScreen .manualSelected{padding:16px;border-radius:18px}.manualScreen .manualSelectedName{font-size:20px}
+.manualScreen .manualFields{grid-template-columns:1fr 1fr}.manualScreen .manualFields input{font-size:24px;padding:16px;text-align:center}
+.manualScreen .manualFields label:last-child{grid-column:1/-1}.manualScreen .manualResultCalc strong{font-size:32px}
+.manualScreen .manualActions{display:grid;grid-template-columns:1fr 1fr}.manualScreen .manualActions .btn{min-height:58px;font-size:17px}
+@media(max-width:720px){.manualScreenHeader{padding:10px 12px}.manualScreenBody{padding:10px 10px 28px}.manualScreenTitle{font-size:19px}.manualScreen .manualSearchBox{top:66px}.manualScreen .manualFields{grid-template-columns:1fr 1fr}.manualScreen .manualActions{grid-template-columns:1fr}.manualScreen .manualActions .btn{width:100%;min-height:58px}.manualScreen .manualSelectedHead .btn{width:100%;margin-top:10px}.manualLaunch{width:100%;justify-content:center}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -146,6 +162,7 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
     <div>
       <div class="card">
         <h2>1. Fale ou digite uma contagem</h2>
+        <button id="openManualBtn" class="btn primary manualLaunch" type="button">⌨ Contagem manual</button>
         <div class="voiceBox">
           <button id="micBtn" class="mic">🎙 Iniciar voz</button><button id="stopMicBtn" class="mic hidden" style="background:var(--red)">■ Encerrar voz</button>
           <input id="phrase" class="phrase" placeholder='Ex.: "caixinha camomila optima 85 caixas vezes 700"' />
@@ -168,14 +185,14 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
       </div>
 
       <div class="card" style="margin-top:16px">
-        <div class="tabs"><button class="tab active" data-tab="totals">Totais por material</button><button class="tab" data-tab="history">Histórico</button><button class="tab" data-tab="manual">Contagem manual</button><button class="tab" data-tab="config">Cadastro de voz</button><button class="tab" data-tab="days">Dias</button><button class="tab adminOnly hidden" data-tab="audit">Auditoria</button><button class="tab adminOnly hidden" data-tab="users">Usuários</button></div>
+        <div class="tabs"><button class="tab active" data-tab="totals">Totais por material</button><button class="tab" data-tab="history">Histórico</button><button class="tab" data-tab="config">Cadastro de voz</button><button class="tab" data-tab="days">Dias</button><button class="tab adminOnly hidden" data-tab="audit">Auditoria</button><button class="tab adminOnly hidden" data-tab="users">Usuários</button></div>
         <section id="tab-totals">
           <div class="summary"><div class="stat"><span>Materiais MB52</span><strong id="matCount">0</strong></div><div class="stat"><span>Materiais contados</span><strong id="countedCount">0</strong></div><div class="stat"><span>Lançamentos</span><strong id="entryCount">0</strong></div></div>
           <div class="searchRow" style="margin-top:12px"><input id="search" class="phrase" placeholder="Buscar material..."/><button id="toggleFinishedBtn" class="btn finishedToggle">Mostrar inativos</button><button id="exportBtn" class="btn primary">⬇ Baixar XLSX</button><button id="resetBtn" class="btn danger">Limpar teste</button></div><div id="finishedInfoTotals" class="finishedHint"></div>
           <div id="mobileTotals" class="mobileTotals"></div><div class="tableWrap desktopTotals"><table><thead><tr><th>Material</th><th>Descrição MB52</th><th>Nome p/ voz</th><th>UM</th><th class="num">Contagem acumulada</th></tr></thead><tbody id="totalsBody"></tbody></table></div>
         </section>
         <section id="tab-history" class="hidden"><div id="historyList"></div></section>
-        <section id="tab-manual" class="hidden"><div class="manualWrap"><div class="hint"><b>Contagem manual rápida.</b> Pesquise por código, descrição, apelido, Tipo, Linha, Produto/Sabor ou Especificação. Materiais inativos não aparecem.</div><div class="manualSearchBox"><input id="manualSearch" class="phrase" autocomplete="off" placeholder="Buscar material ou apelido..."/><div id="manualResults" class="manualResults"></div></div><div id="manualSelected" class="hidden"></div></div></section>
+        <section id="tab-manual" class="hidden"></section>
         <section id="tab-config" class="hidden"><div class="hint" style="margin-bottom:8px">Apelidos separados por ponto e vírgula. Classifique também <b>Tipo</b>, <b>Linha(s)</b>, <b>Produto/Sabor</b> e <b>Especificação</b>. Um material pode pertencer a mais de uma linha. Esses dados estruturados passam a ter prioridade no reconhecimento da fala. O fator padrão é opcional e nunca trava o valor falado.</div><div id="aliasCoverage" class="aliasCoverage"><span class="aliasDot"></span><span id="aliasCoverageText">0 / 0 materiais com apelido cadastrado</span></div><div class="classCoverage"><span>◆</span><span id="classCoverageText">0 / 0 materiais classificados</span></div><div class="searchRow"><input id="configSearch" class="phrase" placeholder="Filtrar por código, descrição, nome de voz ou apelido..."/><select id="configUm" class="btn"><option value="">Todas as UM</option><option value="KG">KG</option><option value="UN">UN</option></select><button id="toggleFinishedConfigBtn" class="btn finishedToggle">Mostrar inativos</button><button id="printAliasesBtn" class="btn primary">🖨 Imprimir materiais e apelidos</button><button id="configClear" class="btn">Limpar filtro</button></div><div id="finishedInfoConfig" class="finishedHint"></div><div id="configFilterInfo" class="hint" style="margin-bottom:8px"></div><div id="configList" class="configList"></div></section>
         <section id="tab-days" class="hidden"><div class="hint" style="margin-bottom:8px">Dias iniciados e finalizados. Você pode baixar novamente o XLSX de qualquer dia.</div><div id="daysList" class="daysList"></div></section>
         <section id="tab-audit" class="hidden"><div class="hint" style="margin-bottom:8px">Registro completo de contagens e alterações, com usuário, data e hora.</div><div class="searchRow"><input id="auditSearch" class="phrase" placeholder="Filtrar por usuário, ação ou material..."/><button id="auditRefresh" class="btn">Atualizar</button></div><div id="auditList"></div></section>
@@ -192,6 +209,18 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
     </div>
   </div>
   <div class="footer">Fluxo: Iniciar dia → contar materiais → baixar XLSX → finalizar dia. Dados compartilhados via Supabase.</div>
+</div>
+<div id="manualScreen" class="manualScreen hidden" aria-hidden="true">
+  <div class="manualScreenHeader">
+    <div><div class="manualScreenTitle">Contagem manual</div><div class="manualScreenSub">Busca rápida por material ou apelido</div></div>
+    <button id="closeManualBtn" class="btn" type="button">✕ Fechar</button>
+  </div>
+  <div class="manualScreenBody">
+    <div class="manualWrap">
+      <div class="manualSearchBox"><input id="manualSearch" class="phrase" autocomplete="off" placeholder="Digite código, material ou apelido..."/><div id="manualResults" class="manualResults"></div></div>
+      <div id="manualSelected" class="hidden"></div>
+    </div>
+  </div>
 </div>
 <div id="toast" class="toast hidden"></div>
 <script>
@@ -670,6 +699,8 @@ function detectFamily(text){
 function findMatches(phrase){
   const phraseNorm=normText(phrase);let out=[];
   const spokenFamily=detectFamily(phrase),spokenType=familyToType(spokenFamily),spokenLine=detectLine(phrase);
+  const allSpokenDims=extractDimensionSequences(phrase);
+  const recognizedSpokenDims=allSpokenDims.filter(sd=>activeVoiceMaterials().some(mm=>materialDimensionPairs(mm).has(sd)));
   for(const m of activeVoiceMaterials()){
     const c=getCfg(m.material);
     const configuredType=c.material_type||'';
@@ -712,21 +743,20 @@ function findMatches(phrase){
 
     // Dimensões completas têm prioridade sobre correspondências parciais.
     // Se a fala contém 6x2x10, um material 6x2x10 recebe forte bônus; um material apenas 2x10 é penalizado.
-    const spokenDims=extractDimensionSequences(phrase);
+    const spokenDims=recognizedSpokenDims;
     const materialDims=materialDimensionPairs(m);
     if(spokenDims.length){
-      let exactDim=false, partialDim=false;
-      for(const sd of spokenDims){
-        if(materialDims.has(sd)){exactDim=true;break}
-        const sp=sd.split('x');
-        for(const md of materialDims){
-          const mp=md.split('x');
-          if(mp.length<sp.length && sp.slice(-mp.length).join('x')===md){partialDim=true}
-        }
+      const exactDim=spokenDims.some(sd=>materialDims.has(sd));
+      if(exactDim){
+        best+=.48;
+        matchSource=matchSource==='base'?'dimensao':matchSource;
+      }else if(materialDims.size){
+        // Se a fala trouxe uma dimensão que existe em algum SKU, candidatos com outra
+        // dimensão não podem vencer por semelhança de sabor/apelido.
+        continue;
+      }else{
+        best-=.16;
       }
-      if(exactDim){best+=.38;matchSource=matchSource==='base'?'dimensao':matchSource}
-      else if(partialDim) best-=.38;
-      else if(materialDims.size) best-=.10;
     }
 
     // Produto/sabor é validado DEPOIS da dimensão para impedir que 10x10, 20x10 etc.
@@ -882,6 +912,17 @@ async function confirmPending(){if(!pending?.m)return;const {phrase,m,calc}=pend
 function cancelPending(){pending=null;document.getElementById('preview').classList.add('hidden');document.getElementById('phrase').value='';voiceState('Pronto para iniciar uma nova leitura.');setFeedback('idle','PRONTO PARA INICIAR','Toque em “Iniciar voz”.');resetUnderstanding()}
 async function undoEntry(id){const removed=entries.find(e=>e.id===id);entries=entries.filter(e=>e.id!==id);localStorage.setItem(STORE,JSON.stringify(entries));renderAll();toast('Lançamento desfeito e total recalculado.');await deleteEntryCloud(id);await logAudit('count_delete','entry',id,{material:removed?.material||'',result:removed?.result||0,um:removed?.um||''});if(cloudEnabled)setCloudStatus('online',`Compartilhado • ${entries.length} lançamentos`);}
 
+function openManualScreen(){
+  if(!activeDay()){toast('Inicie um dia antes de registrar contagens.');return}
+  const scr=document.getElementById('manualScreen');if(!scr)return;
+  scr.classList.remove('hidden');scr.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';
+  manualMaterial=null;const sel=document.getElementById('manualSelected');if(sel){sel.className='hidden';sel.innerHTML=''}
+  const search=document.getElementById('manualSearch');if(search){search.value='';renderManualResults();setTimeout(()=>search.focus(),40)}
+}
+function closeManualScreen(){
+  const scr=document.getElementById('manualScreen');if(!scr)return;
+  scr.classList.add('hidden');scr.setAttribute('aria-hidden','true');document.body.style.overflow='';manualMaterial=null;
+}
 let manualMaterial=null;
 function manualHay(m){const c=getCfg(m.material);return normText([m.material,m.descricao,voiceName(m),c.aliases,c.material_type,c.production_line,c.product_name,c.specification].join(' '))}
 function manualScore(q,m){if(!q)return 0;const h=manualHay(m);const nq=normText(q);if(h.includes(nq))return .98;const qt=tokens(nq);if(!qt.length)return 0;let hit=0;for(const t of qt){let best=0;for(const x of tokens(h))best=Math.max(best,tokenSimilar(t,x));if(best>=.82)hit+=best}return hit/qt.length}
@@ -996,7 +1037,7 @@ function exportXlsx(dayId=(viewDay()?.id||'')){
 
 document.getElementById('toggleFinishedBtn').onclick=toggleFinishedProducts;document.getElementById('toggleFinishedConfigBtn').onclick=toggleFinishedProducts;
 document.getElementById('loginBtn').onclick=loginUser;document.getElementById('loginPassword').addEventListener('keydown',e=>{if(e.key==='Enter')loginUser()});document.getElementById('logoutBtn').onclick=logoutUser;document.getElementById('createUserBtn').onclick=createUser;document.getElementById('auditRefresh').onclick=loadAudit;document.getElementById('auditSearch').oninput=renderAudit;
-const _syncBtn=document.getElementById('syncNowBtn');if(_syncBtn)_syncBtn.onclick=()=>{if(userIsEditing()){toast('Termine a edição do campo antes de atualizar a nuvem.');return}pullCloud(true)};document.getElementById('interpretBtn').onclick=interpret;document.getElementById('phrase').addEventListener('keydown',e=>{if(e.key==='Enter')interpret()});document.getElementById('search').oninput=renderTotals;document.getElementById('manualSearch').oninput=renderManualResults;document.getElementById('configSearch').oninput=renderConfig;document.getElementById('configUm').onchange=renderConfig;document.getElementById('configClear').onclick=()=>{document.getElementById('configSearch').value='';document.getElementById('configUm').value='';renderConfig()};document.getElementById('exportBtn').onclick=()=>exportXlsx();document.getElementById('startDayBtn').onclick=startDay;document.getElementById('finishDayBtn').onclick=finishDay;document.getElementById('downloadDayBtn').onclick=()=>exportXlsx();document.getElementById('resetBtn').onclick=async()=>{const d=viewDay();if(!d){toast('Nenhum dia selecionado.');return}if(d.status==='closed'){toast('Dias finalizados não podem ser limpos.');return}if(confirm('Limpar todos os lançamentos do dia em andamento?')){const ids=dayEntries(d.id).map(e=>e.id);entries=entries.filter(e=>e.day_id!==d.id);localStorage.setItem(STORE,JSON.stringify(entries));renderAll();if(cloudEnabled&&ids.length){try{await cloud.from('voice_entries').delete().eq('workspace',CLOUD_WORKSPACE).eq('day_id',d.id)}catch(err){console.warn(err)}}toast('Contagens do dia limpas.')}};
+const _syncBtn=document.getElementById('syncNowBtn');if(_syncBtn)_syncBtn.onclick=()=>{if(userIsEditing()){toast('Termine a edição do campo antes de atualizar a nuvem.');return}pullCloud(true)};document.getElementById('interpretBtn').onclick=interpret;document.getElementById('phrase').addEventListener('keydown',e=>{if(e.key==='Enter')interpret()});document.getElementById('search').oninput=renderTotals;document.getElementById('manualSearch').oninput=renderManualResults;document.getElementById('openManualBtn').onclick=openManualScreen;document.getElementById('closeManualBtn').onclick=closeManualScreen;document.getElementById('configSearch').oninput=renderConfig;document.getElementById('configUm').onchange=renderConfig;document.getElementById('configClear').onclick=()=>{document.getElementById('configSearch').value='';document.getElementById('configUm').value='';renderConfig()};document.getElementById('exportBtn').onclick=()=>exportXlsx();document.getElementById('startDayBtn').onclick=startDay;document.getElementById('finishDayBtn').onclick=finishDay;document.getElementById('downloadDayBtn').onclick=()=>exportXlsx();document.getElementById('resetBtn').onclick=async()=>{const d=viewDay();if(!d){toast('Nenhum dia selecionado.');return}if(d.status==='closed'){toast('Dias finalizados não podem ser limpos.');return}if(confirm('Limpar todos os lançamentos do dia em andamento?')){const ids=dayEntries(d.id).map(e=>e.id);entries=entries.filter(e=>e.day_id!==d.id);localStorage.setItem(STORE,JSON.stringify(entries));renderAll();if(cloudEnabled&&ids.length){try{await cloud.from('voice_entries').delete().eq('workspace',CLOUD_WORKSPACE).eq('day_id',d.id)}catch(err){console.warn(err)}}toast('Contagens do dia limpas.')}};
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));['totals','history','manual','config','days','audit','users'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));if(b.dataset.tab==='manual')setTimeout(()=>document.getElementById('manualSearch')?.focus(),50)});
 
 
@@ -1170,5 +1211,6 @@ renderAll();
 initCloud();
 
 document.getElementById('printAliasesBtn')?.addEventListener('click',printMaterialsAliases);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!document.getElementById('manualScreen')?.classList.contains('hidden'))closeManualScreen()});
 </script>
 </body></html>
